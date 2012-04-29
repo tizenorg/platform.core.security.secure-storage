@@ -1,0 +1,7 @@
+secure-storage (0.12.7-15) unstable; urgency=low
+
+  * change starting order of ss-server
+  * Git: pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-15
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 19 Jan 2012 16:06:30 +0900

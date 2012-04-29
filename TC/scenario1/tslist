@@ -1,0 +1,5 @@
+/scenario1/utc_SecurityFW_ssm_write_file_func
+/scenario1/utc_SecurityFW_ssm_write_buffer_func
+/scenario1/utc_SecurityFW_ssm_read_func
+/scenario1/utc_SecurityFW_ssm_getinfo_func
+/scenario1/utc_SecurityFW_ssm_delete_file_func
