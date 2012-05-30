@@ -6,6 +6,7 @@ Release:    1
 Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
+Source1001: packaging/secure-storage.manifest 
 Requires(post): /sbin/service
 Requires(post): /sbin/chkconfig
 Requires(postun): /sbin/service
@@ -49,6 +50,7 @@ Secure storage package (ss-server)
 
 
 %build
+cp %{SOURCE1001} .
 cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
 
 
@@ -74,16 +76,19 @@ rm -f /etc/rc.d/rc5.d/S40ss-server
 %postun -n libss-client -p /sbin/ldconfig
 
 %files -n ss-server
+%manifest secure-storage.manifest
 %defattr(-,root,root,-)
 /usr/share/secure-storage/config
 /etc/rc.d/init.d/ss-serverd
 /usr/bin/ss-server
 
 %files -n libss-client
+%manifest secure-storage.manifest
 %defattr(-,root,root)
 /usr/lib/libss-client.so.*
 
 %files -n libss-client-devel
+%manifest secure-storage.manifest
 %defattr(-,root,root,-)
 /usr/include/ss_manager.h
 /usr/lib/pkgconfig/secure-storage.pc
