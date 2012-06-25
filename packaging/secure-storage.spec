@@ -1,16 +1,12 @@
-#sbs-git:slp/pkgs/s/secure-storage secure-storage 0.12.7 b703988ab31e25e5cbb23de33d39b411f6052e1f
 Name:       secure-storage
 Summary:    Secure storage
-Version: 0.12.7
+Version:    0.12.7
 Release:    1
 Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
-Source1001: packaging/secure-storage.manifest 
-Requires(post): /sbin/service
-Requires(post): /sbin/chkconfig
-Requires(postun): /sbin/service
-Requires(postun): /sbin/chkconfig
+Source1:    secure-storage.service
+Source1001: packaging/secure-storage.manifest
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(security-server)
@@ -40,6 +36,10 @@ Secure storage package (client-devel)
 %package -n ss-server
 Summary:    Secure storage  (ss-server)
 Group:      Development/Libraries
+Requires(preun): /usr/bin/systemctl
+Requires(post):  /usr/bin/systemctl
+Requires(postun): /usr/bin/systemctl
+Requires:   systemd
 Requires:   libss-client = %{version}-%{release}
 
 %description -n ss-server
@@ -60,16 +60,28 @@ make %{?jobs:-j%jobs}
 rm -rf %{buildroot}
 %make_install
 
+mkdir -p %{buildroot}%{_libdir}/systemd/system/multi-user.target.wants
+install -m 0644 %{SOURCE1} %{buildroot}%{_libdir}/systemd/system/secure-storage.service
+ln -s ../secure-storage.service %{buildroot}%{_libdir}/systemd/system/multi-user.target.wants/secure-storage.service
+
+mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc3.d
+mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc5.d
+ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc3.d/S40ss-server
+ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc5.d/S40ss-server
+
+%preun -n ss-server
+if [ $1 == 0 ]; then
+    systemctl stop secure-storage.service
+fi
 
 %post -n ss-server
-mkdir -p /etc/rc.d/rc3.d
-mkdir -p /etc/rc.d/rc5.d
-ln -s /etc/rc.d/init.d/ss-serverd /etc/rc.d/rc3.d/S40ss-server
-ln -s /etc/rc.d/init.d/ss-serverd /etc/rc.d/rc5.d/S40ss-server
+systemctl daemon-reload
+if [ $1 == 1 ]; then
+    systemctl restart secure-storage.service
+fi
 
 %postun -n ss-server
-rm -f /etc/rc.d/rc3.d/S40ss-server
-rm -f /etc/rc.d/rc5.d/S40ss-server
+systemctl daemon-reload
 
 %post -n libss-client -p /sbin/ldconfig
 
@@ -77,20 +89,22 @@ rm -f /etc/rc.d/rc5.d/S40ss-server
 
 %files -n ss-server
 %manifest secure-storage.manifest
-%defattr(-,root,root,-)
-/usr/share/secure-storage/config
-/etc/rc.d/init.d/ss-serverd
-/usr/bin/ss-server
+%attr(0755,root,root) %{_sysconfdir}/rc.d/init.d/ss-serverd
+%{_sysconfdir}/rc.d/rc3.d/S40ss-server
+%{_sysconfdir}/rc.d/rc5.d/S40ss-server
+%{_bindir}/ss-server
+%{_libdir}/systemd/system/secure-storage.service
+%{_libdir}/systemd/system/multi-user.target.wants/secure-storage.service
+%{_datadir}/secure-storage/config
 
 %files -n libss-client
 %manifest secure-storage.manifest
-%defattr(-,root,root)
-/usr/lib/libss-client.so.*
+%{_libdir}/libss-client.so.*
 
 %files -n libss-client-devel
 %manifest secure-storage.manifest
 %defattr(-,root,root,-)
-/usr/include/ss_manager.h
-/usr/lib/pkgconfig/secure-storage.pc
-/usr/lib/libss-client.so
+%{_includedir}/ss_manager.h
+%{_libdir}/pkgconfig/secure-storage.pc
+%{_libdir}/libss-client.so
 

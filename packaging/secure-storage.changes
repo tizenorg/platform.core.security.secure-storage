@@ -1,0 +1,4 @@
+* Mon Jun 25 2012 Patrick McCarty <patrick.mccarty@linux.intel.com> - 0.12.7
+- Create initscripts in %install instead of %post
+- Add a systemd service file
+
