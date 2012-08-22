@@ -3,8 +3,8 @@ Name:       secure-storage
 Summary:    Secure storage
 Version: 0.12.7
 Release:    1
-Group:      System/Security
-License:    Apache 2.0
+Group:      TO_BE/FILLED_IN
+License:    LGPL
 Source0:    secure-storage-%{version}.tar.gz
 Requires(post): /sbin/service
 Requires(post): /sbin/chkconfig
@@ -13,6 +13,7 @@ Requires(postun): /sbin/chkconfig
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(security-server)
+BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  cmake
 
 %description

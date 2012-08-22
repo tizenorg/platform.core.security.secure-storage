@@ -1,7 +1,7 @@
 /*
  * secure storage
  *
- * Copyright (c) 2000 - 2012 Samsung Electronics Co., Ltd All Rights Reserved 
+ * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd All Rights Reserved 
  *
  * Contact: Kidong Kim <kd0228.kim@samsung.com>
  *
@@ -106,14 +106,14 @@ char* get_preserved_dir()
 }
 
 /* get key from hardware( ex. OMAP e-fuse random key ) */
-void GetKey(char* key)
+void GetKey(char* key, unsigned char* iv)
 {
 #ifdef USE_KEY_FILE
 	FILE* fp_key = NULL;
-	char buf[32];
+	char buf[33];
 	char* key_path = NULL;
 
-	memset(buf, 0x00, strlen(buf));
+	memset(buf, 0x00, 33);
 
 	key_path = get_key_file_path();
 	if(key_path == NULL)
@@ -130,7 +130,7 @@ void GetKey(char* key)
 		}
 		else
 		{
-			if(!fgets(buf, 16, fp_key))
+			if(!fgets(buf, 33, fp_key))
 			{
 				SLOGE("[%s] Secret key file reading error\n", __func__);
 				memcpy(buf, skey, 16);	// if fail to get key, set to default value.
@@ -140,6 +140,8 @@ void GetKey(char* key)
 
 	if(key)
 		strncpy(key, buf, 16);
+	if(iv)
+		strncpy(iv, buf+16, 16);
 
 	if(key_path)
 		free(key_path);
@@ -149,6 +151,8 @@ void GetKey(char* key)
 #else
 	if(key)
 		memcpy(key, skey, 16);
+	if(iv)
+		memcpy(iv, 0x00, 16);
 #endif // USE_KEY_FILE
 }
 
@@ -436,22 +440,21 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 }
 
 /* aes crypto function wrapper - p_text : plain text, c_text : cipher text, aes_key : from GetKey, mode : ENCRYPT/DECRYPT, size : data size */
-unsigned char* AES_Crypto(unsigned char* p_text, unsigned char* c_text, char* aes_key, int mode,  unsigned long size)
+unsigned char* AES_Crypto(unsigned char* p_text, unsigned char* c_text, char* aes_key, unsigned char* iv, int mode,  unsigned long size)
 {
 	AES_KEY e_key, d_key;
-	unsigned char ivec[16] = {0, };
 	
 	AES_set_encrypt_key((unsigned char*)aes_key, 128, &e_key);
 	AES_set_decrypt_key((unsigned char*)aes_key, 128, &d_key);
 	
 	if(mode == 1)
 	{
-		AES_cbc_encrypt(p_text, c_text, size, &e_key, ivec, AES_ENCRYPT);
+		AES_cbc_encrypt(p_text, c_text, size, &e_key, iv, AES_ENCRYPT);
 		return c_text;
 	}
 	else
 	{
-		AES_cbc_encrypt(c_text, p_text, size, &d_key, ivec, AES_DECRYPT);
+		AES_cbc_encrypt(c_text, p_text, size, &d_key, iv, AES_DECRYPT);
 		return p_text;
 	}
 }
@@ -463,13 +466,15 @@ unsigned char* AES_Crypto(unsigned char* p_text, unsigned char* c_text, char* ae
 
 int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_flag flag, const char* cookie, const char* group_id)
 {
-	char key[16];
+	char key[16] = {0, };
+	unsigned char iv[16] = {0, };
 	const char* in_filepath = data_filepath;
 	char out_filepath[MAX_FILENAME_LEN] = {0, };
 	FILE* fd_in = NULL;
 	FILE* fd_out = NULL;
 	struct stat file_info;
 	ssm_file_info_convert_t sfic;
+	int res = -1;
 
 	unsigned char p_text[ENCRYPT_SIZE]= {0, };
 	unsigned char e_text[ENCRYPT_SIZE]= {0, };
@@ -520,11 +525,11 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	
 	// 4. encrypt real data 
 	read = fread(p_text, 1, ENCRYPT_SIZE, fd_in);
-	GetKey(key);
-	
+	GetKey(key, iv);
+
 	while(read == ENCRYPT_SIZE)
 	{
-		AES_Crypto(p_text, e_text, key, 1, ENCRYPT_SIZE);
+		AES_Crypto(p_text, e_text, key, iv, 1, ENCRYPT_SIZE);
 		
 		fwrite(e_text, 1, ENCRYPT_SIZE, fd_out);
 
@@ -534,8 +539,22 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	}
 
 	rest = AES_BLOCK_SIZE - (read % AES_BLOCK_SIZE);
-	AES_Crypto(p_text, e_text, key, 1, read+rest);
+	AES_Crypto(p_text, e_text, key, iv, 1, read+rest);
 	fwrite(e_text, 1, read + rest, fd_out);
+
+	if((res = fflush(fd_out)) != 0) {
+		SLOGE("[%s] fail to execute fflush().\n", __func__);
+		return SS_FILE_WRITE_ERROR;
+	}
+	else {
+		SLOGI("[%s] success to execute fflush().\n", __func__);
+		if((res = fsync(fd_out->_fileno)) == -1) {
+			SLOGE("[%s] fail to execute fsync().\n", __func__);
+			return SS_FILE_WRITE_ERROR;
+		}
+		else
+			SLOGI("[%s] success to execute fsync(). read=[%d], rest=[%d]\n", __func__, read, rest);
+	}
 
 	fclose(fd_in);
 	fclose(fd_out);
@@ -545,7 +564,8 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 
 int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen, const char* filename, ssm_flag flag, const char* cookie, const char* group_id)
 {
-	char key[16];
+	char key[16] = {0, };
+	unsigned char iv[16] = {0, };
 	char out_filepath[MAX_FILENAME_LEN+1];
 	char *buffer = NULL;
 	unsigned int writeLen = 0, loop, rest, count;
@@ -553,6 +573,7 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	ssm_file_info_convert_t sfic;
 	unsigned char p_text[ENCRYPT_SIZE]= {0, };
 	unsigned char e_text[ENCRYPT_SIZE]= {0, };
+	int res = -1;
 	
 	writeLen = (unsigned int)(bufLen / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
 	buffer = (char*)malloc(writeLen + 1);
@@ -594,20 +615,34 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	// encrypt buffer 
 	loop = writeLen / ENCRYPT_SIZE;
 	rest = writeLen % ENCRYPT_SIZE;
-	GetKey(key);
+	GetKey(key, iv);
 	
 	for(count = 0; count < loop; count++)
 	{
 		memcpy(p_text, buffer+count*ENCRYPT_SIZE, ENCRYPT_SIZE);
-		AES_Crypto( p_text, e_text, key, 1, ENCRYPT_SIZE);	
+		AES_Crypto( p_text, e_text, key, iv, 1, ENCRYPT_SIZE);	
 		fwrite(e_text, 1, ENCRYPT_SIZE, fd_out);
 		memset(e_text, 0x00, ENCRYPT_SIZE);
 		memset(p_text, 0x00, ENCRYPT_SIZE);
 	}
 		
 	memcpy(p_text, buffer + loop*ENCRYPT_SIZE, rest);
-	AES_Crypto(p_text, e_text, key, 1, rest);
+	AES_Crypto(p_text, e_text, key, iv, 1, rest);
 	fwrite(e_text, 1, rest, fd_out);
+	
+	if((res = fflush(fd_out)) != 0) {
+		SLOGE("[%s] fail to execute fflush().\n", __func__);
+		return SS_FILE_WRITE_ERROR;
+	}
+	else {
+		SLOGI("[%s] success to execute fflush().\n", __func__);
+		if((res = fsync(fd_out->_fileno)) == -1) {
+			SLOGE("[%s] fail to execute fsync().\n", __func__);
+			return SS_FILE_WRITE_ERROR;
+		}
+		else
+			SLOGI("[%s] success to execute fsync(). loop=[%d], rest=[%d]\n", __func__, loop, rest);
+	}
 
 	fclose(fd_out);	
 	free(buffer);
@@ -618,8 +653,9 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, unsigned int count, unsigned int* readLen, ssm_flag flag, const char* cookie, const char* group_id)
 {
 	unsigned int offset = count * MAX_RECV_DATA_LEN;
-	char key[16];
-	char in_filepath[MAX_FILENAME_LEN] = {0,};
+	char key[16] = {0, };
+	unsigned char iv[16] = {0, };
+	char in_filepath[MAX_FILENAME_LEN] = {0, };
 	FILE* fd_in = NULL;
 	char *out_data = pRetBuf;
 	unsigned char p_text[ENCRYPT_SIZE]= {0, };
@@ -652,13 +688,13 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	fseek(fd_in, (long)offset + sizeof(ssm_file_info_t), SEEK_SET);
 	
 	// 4. decrypt data
-	GetKey(key);
+	GetKey(key, iv);
 	
 	read = fread(e_text, 1, ENCRYPT_SIZE, fd_in);
 	
 	while((read == ENCRYPT_SIZE))
 	{
-		AES_Crypto(p_text, e_text, key, 0, ENCRYPT_SIZE) ;
+		AES_Crypto(p_text, e_text, key, iv, 0, ENCRYPT_SIZE) ;
 		
 		memcpy(out_data, p_text, ENCRYPT_SIZE);
 		out_data += ENCRYPT_SIZE;
@@ -673,7 +709,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 		read = fread(e_text, 1, ENCRYPT_SIZE, fd_in);
 	}
 
-	AES_Crypto(p_text, e_text, key, 0, read) ;
+	AES_Crypto(p_text, e_text, key, iv, 0, read) ;
 
 	memcpy(out_data, p_text, read);
 	out_data += read;

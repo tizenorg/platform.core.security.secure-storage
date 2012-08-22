@@ -1,7 +1,7 @@
 /*
  * secure storage
  *
- * Copyright (c) 2000 - 2012 Samsung Electronics Co., Ltd All Rights Reserved 
+ * Copyright (c) 2000 - 2011 Samsung Electronics Co., Ltd All Rights Reserved 
  *
  * Contact: Kidong Kim <kd0228.kim@samsung.com>
  *
@@ -119,8 +119,10 @@ int make_key_file()
 	int random_dev = -1;
 	int i = 0;
 	char tmp_key[1];
-	char key[16] = {0, };
+	char key[33];
 	char* key_path = NULL;
+
+	memset(key, 0x00, 33);
 
 	key_path = get_key_file_path();
 	if(key_path == NULL)
@@ -136,16 +138,16 @@ int make_key_file()
 		return 0;
 	}
 
-	while(i < 16)
+	while(i < 32)
 	{
 		read(random_dev, tmp_key, 1);
 
-		if((tmp_key[0] < '!') || (tmp_key[0] > '~'))
-			continue;
-
-		key[i] = tmp_key[0];
-		i++;
+		if((tmp_key[0] >= '!') && (tmp_key[0] <= '~')) {
+			key[i] = tmp_key[0];
+			i++;
+		}
 	}
+SLOGI("key = [%s], [%d]\n", key, strlen(key));
 
 	if(!(fp_key = fopen(key_path, "w")))
 	{
