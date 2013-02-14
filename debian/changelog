@@ -1,0 +1,398 @@
+secure-storage (0.12.7-18) unstable; urgency=low
+
+  * randomize initial vector of AES_cbc cryptographic algorithm
+  * Git: slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-18
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 14 May 2012 12:00:40 +0900
+
+secure-storage (0.12.7-17) unstable; urgency=low
+
+  * flush and sync encrypted file
+  * Git: slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-17
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 08 May 2012 17:24:23 +0900
+
+secure-storage (0.12.7-16) unstable; urgency=low
+
+  * sync encrypted file in order to prepare unexpected power down
+  * Git: slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-16
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 23 Apr 2012 16:55:36 +0900
+
+secure-storage (0.12.7-15) unstable; urgency=low
+
+  * change starting order of ss-server
+  * Git: slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-15
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 19 Jan 2012 16:06:30 +0900
+
+secure-storage (0.12.7-14) unstable; urgency=low
+
+  * 11/12/20
+  *  - remove systemd dependency
+  * Git: slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-14
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 20 Dec 2011 15:03:23 +0900
+
+secure-storage (0.12.7-13) unstable; urgency=low
+
+  * 11/12/07
+  *  - add boiler-plate on testcases
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-13
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 07 Dec 2011 09:55:30 +0900
+
+secure-storage (0.12.7-12) unstable; urgency=low
+
+  * 11/12/02
+  *  - change license : LGPL -> apache
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-12
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 02 Dec 2011 17:02:00 +0900
+
+secure-storage (0.12.7-11) unstable; urgency=low
+
+  * fix install file
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-11
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 17 Oct 2011 13:58:06 +0900
+
+secure-storage (0.12.7-10) unstable; urgency=low
+
+  * add testcases
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-10
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 14 Oct 2011 14:10:04 +0900
+
+secure-storage (0.12.7-9) unstable; urgency=low
+
+  * fix boiler-plate
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-9
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 13 Jul 2011 10:23:26 +0900
+
+secure-storage (0.12.7-8) unstable; urgency=low
+
+  * fix strncpy problem
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-8
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 16 Feb 2011 10:07:00 +0900
+
+secure-storage (0.12.7-7) unstable; urgency=low
+
+  * fix prevent bugs
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-7
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 20 Jan 2011 16:52:02 +0900
+
+secure-storage (0.12.7-6) unstable; urgency=low
+
+  * fix double free and strtoul problem
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-6
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 04 Jan 2011 15:09:08 +0900
+
+secure-storage (0.12.7-5) unstable; urgency=low
+
+  * fix postinst script
+  * Git: 165.213.180.234:slp/pkgs/s/secure-storage
+  * Tag: secure-storage_0.12.7-5
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 15 Dec 2010 10:15:03 +0900
+
+secure-storage (0.12.7-4) unstable; urgency=low
+
+  * fix strip problem
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.7-4
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 01 Dec 2010 10:34:18 +0900
+
+secure-storage (0.12.7-3) unstable; urgency=low
+
+  * add boilerplate in test codes
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.7-3
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 26 Nov 2010 15:32:47 +0900
+
+secure-storage (0.12.7-2) unstable; urgency=low
+
+  * add new testcases
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.7-2
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 24 Nov 2010 15:48:28 +0900
+
+secure-storage (0.12.7-1) unstable; urgency=low
+
+  * fix doxygen and add new configuration file
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.7-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 12 Nov 2010 18:33:40 +0900
+
+secure-storage (0.12.6-1) unstable; urgency=low
+
+  * modify APIs - add new parameter 'group_id'
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.6-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 03 Nov 2010 09:20:55 +0900
+
+secure-storage (0.12.5-11) unstable; urgency=low
+
+  * fix doxygen
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-11
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 27 Oct 2010 15:01:16 +0900
+
+secure-storage (0.12.5-10) unstable; urgency=low
+
+  * fix bug
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-10
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 22 Oct 2010 18:52:59 +0900
+
+secure-storage (0.12.5-9) unstable; urgency=low
+
+  * add new boiler-plate
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-strage
+  * Tag: secure-storage_0.12.5-9
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 22 Oct 2010 17:49:33 +0900
+
+secure-storage (0.12.5-8) unstable; urgency=low
+
+  * make another symbolic link
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-8
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 18 Oct 2010 14:15:03 +0900
+
+secure-storage (0.12.5-7) unstable; urgency=low
+
+  * delete some useless APIs
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-7
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 15 Oct 2010 16:58:32 +0900
+
+secure-storage (0.12.5-6) unstable; urgency=low
+
+  * modify doxygen group
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-6
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 27 Sep 2010 18:01:20 +0900
+
+secure-storage (0.12.5-5) unstable; urgency=low
+
+  * change copyright context
+  * Git: 165.213.180.234:/git/slp/pkgs/secure-storage
+  * Tag: secure-storage_0.12.5-5
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 31 Aug 2010 14:14:00 +0900
+
+secure-storage (0.12.5-4) unstable; urgency=low
+
+  * add new API - ssm_delete_file
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.5-4
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Sat, 12 Jun 2010 14:44:21 +0900
+
+secure-storage (0.12.5-3) unstable; urgency=low
+
+  * delete deprecated values
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.5-3
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Sat, 05 Jun 2010 13:38:31 +0900
+
+secure-storage (0.12.5-2) unstable; urgency=low
+
+  * modify deprecated method
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.5-2
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 24 May 2010 20:41:56 +0900
+
+secure-storage (0.12.5-1) unstable; urgency=low
+
+  * change API names and data structure names
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.5-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 24 May 2010 18:13:20 +0900
+
+secure-storage (0.12.4-6) unstable; urgency=low
+
+  * fix uploader info
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.4-6
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Wed, 19 May 2010 13:58:43 +0900
+
+secure-storage (0.12.4-5) unstable; urgency=low
+
+  * give a 777permission to socket
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.4-5
+
+ -- root <kd0228.kim@samsung.com>  Wed, 19 May 2010 11:43:59 +0900
+
+secure-storage (0.12.4-4) unstable; urgency=low
+
+  * fix tagging problem
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.4-4
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 19 Apr 2010 18:24:05 +0900
+
+secure-storage (0.12.4-3) unstable; urgency=low
+
+  * fix tagging problem
+  * Tag: secure-storage_0.12.4-3
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Sat, 17 Apr 2010 17:44:39 +0900
+
+secure-storage (0.12.4-2) unstable; urgency=low
+
+  * add postinst scripts
+  * Tag: secure-storage_0.12.4-2
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Fri, 16 Apr 2010 19:33:40 +0900
+
+secure-storage (0.12.4-1) unstable; urgency=low
+
+  * fix problem regarding version
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.12.4-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 12 Apr 2010 21:35:23 +0900
+
+secure-storage (0.12.3-1) unstable; urgency=low
+
+  * fix problem regarding version
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 12 Apr 2010 21:21:08 +0900
+
+secure-storage (0.12.2-3) unstable; urgency=low
+
+  * Revert to version 0.12.2-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 12 Apr 2010 21:09:24 +0900
+
+secure-storage (0.12.2-2) unstable; urgency=low
+
+  * Make [pkgname].postinst in order to change file permission and owner
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 12 Apr 2010 20:33:37 +0900
+
+secure-storage (0.12.2-1) unstable; urgency=low
+
+  * add flag 'TEST_TARGET'
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 12 Apr 2010 17:35:17 +0900
+
+secure-storage (0.12.1-1) unstable; urgency=low
+
+  * re-make version
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 08 Apr 2010 16:37:10 +0900
+
+secure-storage (0.2.1-1) unstable; urgency=low
+
+  * case of inhouse package
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/secure-storage-0
+  * Tag: secure-storage_0.2.1-1
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 08 Apr 2010 12:07:01 +0900
+
+secure-storage (0.11) unstable; urgency=low
+
+  * Add new API - for Widget encryption / decrpytion
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 23 Mar 2010 16:17:46 +0900
+
+secure-storage (0.10) unstable; urgency=low
+
+  * In case of parameter which must not be modified, change char* to const char*
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 18 Mar 2010 15:30:04 +0900
+
+secure-storage (0.9) unstable; urgency=low
+
+  * Remove 'SLP' and 'slp' prefix
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 26 Jan 2010 16:42:27 +0900
+
+secure-storage (0.8) unstable; urgency=low
+
+  * Add internal flag
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Sat, 23 Jan 2010 17:17:25 +0900
+
+secure-storage (0.7) unstable; urgency=low
+
+  * Modify link name
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 21 Jan 2010 10:35:18 +0900
+
+secure-storage (0.6) unstable; urgency=low
+
+  * Remove dev dependency of binary package.
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 14 Jan 2010 15:06:32 +0900
+
+secure-storage (0.5) unstable; urgency=low
+
+  * export one more function
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 12 Jan 2010 08:43:44 +0900
+
+secure-storage (0.4) unstable; urgency=low
+
+  * Modify ss-server auto-activation code.
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 11 Jan 2010 15:20:25 +0900
+
+secure-storage (0.3) unstable; urgency=low
+
+  * Add prefix SLPAPI - can use APIs of secure storage
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 11 Jan 2010 11:20:12 +0900
+
+secure-storage (0.2) unstable; urgency=low
+
+  * Resolve dependency problem.
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Tue, 05 Jan 2010 19:34:26 +0900
+
+secure-storage (0.1) unstable; urgency=low
+
+  * Make CMakeLists.txt and Initial Release.
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Thu, 17 Dec 2009 16:37:03 +0900
+
+secure-storage (0) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Ki Dong Kim <kd0228.kim@samsung.com>  Wed, 09 Dec 2009 09:55:06 +0900

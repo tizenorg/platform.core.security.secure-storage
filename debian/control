@@ -1,0 +1,30 @@
+Source: secure-storage
+Priority: extra
+Maintainer: Kidong Kim <kd0228.kim@samsung.com>
+Build-Depends: debhelper (>= 5), autotools-dev, libssl-dev, openssl, dlog-dev
+Standards-Version: 3.7.2
+Section: base
+
+Package: libss-client-dev
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, libssl-dev, libss-client-0 (= ${Source-Version}), dlog-dev
+Description: secure storage client library develpoment package
+
+Package: libss-client-0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: secure storage client library package
+
+Package: ss-server
+Section: base
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libss-client-0 (= ${Source-Version}), libdlog-0
+Description: secure storage server
+
+Package: ss-server-dbg
+Section: debug
+Architecture: any
+Depends: ss-server (= ${Source-Version})
+Description: debug package of secure storage source package
