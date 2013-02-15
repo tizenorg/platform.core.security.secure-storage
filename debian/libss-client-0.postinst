@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#if [ ${USER} == "root" ]
+#then
+#	chown root:root /usr/lib/libss-client.so
+#fi
+
+#chmod 644 /usr/lib/libss-client.so
