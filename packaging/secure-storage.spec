@@ -1,7 +1,7 @@
 Name:       secure-storage
 Summary:    Secure storage
 Version:    0.12.9
-Release:    3
+Release:    4
 Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
