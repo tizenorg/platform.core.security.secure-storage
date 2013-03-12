@@ -1,0 +1,7 @@
+secure-storage (0.12.7-18) unstable; urgency=low
+
+  * randomize initial vector of AES_cbc cryptographic algorithm
+  * Git: framework/security/secure-storage
+  * Tag: secure-storage_0.12.7-18
+
+ -- Kidong Kim <kd0228.kim@samsung.com>  Mon, 14 May 2012 12:00:40 +0900
