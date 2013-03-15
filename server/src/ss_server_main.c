@@ -680,7 +680,8 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 {
 	unsigned int offset = count * MAX_RECV_DATA_LEN;
 	char key[16] = {0, };
-	unsigned char iv[16] = {0, };
+	static unsigned char iv[16] = {0, };
+	unsigned char temp_iv[16] = {0, };
 	char in_filepath[MAX_FILENAME_LEN] = {0, };
 	FILE* fd_in = NULL;
 	char *out_data = pRetBuf;
@@ -720,7 +721,9 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	}
 	
 	// 4. decrypt data
-	GetKey(key, iv);
+	GetKey(key, temp_iv);
+	if(count == 0)
+		memcpy(iv, temp_iv, 16);
 	
 	read = fread(e_text, 1, ENCRYPT_SIZE, fd_in);
 	

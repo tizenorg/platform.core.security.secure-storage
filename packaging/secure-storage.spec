@@ -18,8 +18,6 @@ Secure storage package
 Summary:    Secure storage  (client)
 Group:      Development/Libraries
 Provides:   libss-client.so
-Requires(post): /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
 
 %description -n libss-client
 Secure storage package (client)
@@ -49,18 +47,17 @@ Secure storage package (ss-server)
 
 
 %build
-cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix}
+%cmake .
 
 
 make %{?jobs:-j%jobs}
 
 %install
-rm -rf %{buildroot}
 %make_install
 
-mkdir -p %{buildroot}%{_libdir}/systemd/system/multi-user.target.wants
-install -m 0644 %{SOURCE1} %{buildroot}%{_libdir}/systemd/system/secure-storage.service
-ln -s ../secure-storage.service %{buildroot}%{_libdir}/systemd/system/multi-user.target.wants/secure-storage.service
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants
+install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system/secure-storage.service
+ln -s ../secure-storage.service %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
 
 mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc3.d
 mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc5.d
@@ -96,8 +93,8 @@ systemctl daemon-reload
 %{_sysconfdir}/rc.d/rc3.d/S40ss-server
 %{_sysconfdir}/rc.d/rc5.d/S40ss-server
 %{_bindir}/ss-server
-%{_libdir}/systemd/system/secure-storage.service
-%{_libdir}/systemd/system/multi-user.target.wants/secure-storage.service
+%{_prefix}/lib/systemd/system/secure-storage.service
+%{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
 %{_datadir}/secure-storage/config
 /usr/share/license/ss-server
 
