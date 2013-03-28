@@ -3,7 +3,6 @@ PROJECT(secure-storage C)
 
 SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 SET(EXEC_PREFIX "\${prefix}")
-SET(LIBDIR "\${prefix}/lib")
 SET(INCLUDEDIR "\${prefix}/include")
 SET(VERSION_MAJOR 1)
 SET(VERSION ${VERSION_MAJOR}.0.0)
