@@ -261,7 +261,11 @@ void SsServerComm(void)
 		switch(recv_data.req_type)
 		{
 			case 1:
+#ifndef SMACK_GROUP_ID
 				send_data.rsp_type = SsServerDataStoreFromFile(cr.pid, recv_data.data_infilepath, recv_data.flag, recv_data.cookie, recv_data.group_id);
+#else
+				send_data.rsp_type = SsServerDataStoreFromFile(cr.pid, recv_data.data_infilepath, recv_data.flag, client_sockfd, recv_data.group_id);
+#endif
 
 				if(send_data.rsp_type == 1)
 				{
@@ -277,7 +281,11 @@ void SsServerComm(void)
 				write(client_sockfd, (char*)&send_data, sizeof(send_data));
 				break;
 			case 2:
+#ifndef SMACK_GROUP_ID
 				send_data.rsp_type = SsServerDataStoreFromBuffer(cr.pid, recv_data.buffer, recv_data.count, recv_data.data_infilepath, recv_data.flag, recv_data.cookie, recv_data.group_id);
+#else
+				send_data.rsp_type = SsServerDataStoreFromBuffer(cr.pid, recv_data.buffer, recv_data.count, recv_data.data_infilepath, recv_data.flag, client_sockfd, recv_data.group_id);
+#endif
 
 				if(send_data.rsp_type == 1)
 				{
@@ -293,8 +301,11 @@ void SsServerComm(void)
 				write(client_sockfd, (char*)&send_data, sizeof(send_data));
 				break;
 			case 3:
+#ifndef SMACK_GROUP_ID
 				send_data.rsp_type = SsServerDataRead(cr.pid, recv_data.data_infilepath, send_data.buffer, recv_data.count, &(send_data.readLen), recv_data.flag, recv_data.cookie, recv_data.group_id);
-			
+#else
+				send_data.rsp_type = SsServerDataRead(cr.pid, recv_data.data_infilepath, send_data.buffer, recv_data.count, &(send_data.readLen), recv_data.flag, client_sockfd, recv_data.group_id);
+#endif
 				if(send_data.rsp_type == 1)
 				{
 					strncpy(send_data.data_filepath, recv_data.data_infilepath, MAX_FILENAME_LEN - 1);
@@ -308,9 +319,13 @@ void SsServerComm(void)
 
 				write(client_sockfd, (char*)&send_data, sizeof(send_data));
 				break;
-			case 4: 
+			case 4:
+#ifndef SMACK_GROUP_ID
 				send_data.rsp_type = SsServerGetInfo(cr.pid, recv_data.data_infilepath, send_data.buffer, recv_data.flag, recv_data.cookie, recv_data.group_id);
-				
+#else
+				send_data.rsp_type = SsServerGetInfo(cr.pid, recv_data.data_infilepath, send_data.buffer, recv_data.flag, client_sockfd /*recv_data.cookie*/, recv_data.group_id);
+#endif
+
 				if(send_data.rsp_type == 1)
 				{
 					strncpy(send_data.data_filepath, recv_data.data_infilepath, MAX_FILENAME_LEN - 1);
@@ -325,7 +340,11 @@ void SsServerComm(void)
 				write(client_sockfd, (char*)&send_data, sizeof(send_data));
 				break;			
 			case 10:
+#ifndef SMACK_GROUP_ID
 				send_data.rsp_type = SsServerDeleteFile(cr.pid, recv_data.data_infilepath, recv_data.flag, recv_data.cookie, recv_data.group_id);
+#else
+				send_data.rsp_type = SsServerDeleteFile(cr.pid, recv_data.data_infilepath, recv_data.flag, client_sockfd, recv_data.group_id);
+#endif
 				
 				if(send_data.rsp_type == 1)
 				{

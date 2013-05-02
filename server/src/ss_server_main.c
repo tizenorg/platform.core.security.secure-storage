@@ -47,6 +47,7 @@
 #include "secure_storage.h"
 #include "ss_server_main.h"
 #include "ss_server_ipc.h"
+#include <security-server/security-server.h>
 
 #ifdef USE_KEY_FILE
 #define CONF_FILE_PATH	"/usr/share/secure-storage/config"
@@ -106,6 +107,17 @@ char* get_preserved_dir()
 	}
 
 	return retbuf;
+}
+
+int IsSmackEnabled()
+{
+	FILE *file = NULL;
+	if(file = fopen("/smack/load2", "r"))
+	{
+		fclose(file);
+		return 1;
+	}
+	return 0;
 }
 
 /* get key from hardware( ex. OMAP e-fuse random key ) */
@@ -208,6 +220,38 @@ int check_privilege(const char* cookie, const char* group_id)
 	return 0; // success always
 }
 
+int check_privilege_by_sockfd(int sockfd, const char* object, const char* access_rights)
+{
+	int ret = -1;	// if success, return 0
+	const char* private_group_id = "NOTUSED";
+
+	if(!IsSmackEnabled())
+	{
+		return 0;
+	}
+
+	if(!strncmp(object,"NOTUSED", strlen(private_group_id)))
+	{
+		SLOGD("requested default group_id :%s. get smack label", object);
+		char* client_process_smack_label = security_server_get_smacklabel_sockfd(sockfd);
+		if(client_process_smack_label)
+		{
+			SLOGD("defined smack label : %s", client_process_smack_label);
+			strncpy(object, client_process_smack_label, strlen(client_process_smack_label));
+		}
+		else
+		{
+			SLOGD("failed to get smack label");
+			return -1;
+		}
+	}
+
+	SLOGD("object : %s, access_rights : %s", object, access_rights);
+	ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+
+	return ret;
+}
+
 /* convert normal file path to secure storage file path  */
 int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, const char* group_id)
 {
@@ -293,7 +337,11 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 			}
 		}
 		
-		strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
+		int length_of_file = 0;
+		if(if_pointer != NULL)
+		{
+			strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
+		}
 		strncat(dest, "_", 1);
 
 		SHA1((unsigned char*)src, (size_t)strlen(src), path_hash);
@@ -303,7 +351,7 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 		strncat(dest, s, strlen(s));
 		strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
 
-		dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + strlen(if_pointer) + strlen(s) + strlen(SS_FILE_POSTFIX) + 4] = '\0';
+		dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + length_of_file + strlen(s) + strlen(SS_FILE_POSTFIX) + 4] = '\0';
 	}
 	else if(flag == SSM_FLAG_SECRET_PRESERVE) // /tmp/csa/
 	{
@@ -467,8 +515,11 @@ unsigned char* AES_Crypto(unsigned char* p_text, unsigned char* c_text, char* ae
 /***************************************************************************
  * Function Definition
  **************************************************************************/
-
+#ifndef SMACK_GROUP_ID
 int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_flag flag, const char* cookie, const char* group_id)
+#else
+int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_flag flag, int sockfd, const char* group_id)
+#endif
 {
 	char key[16] = {0, };
 	unsigned char iv[16] = {0, };
@@ -486,11 +537,13 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	size_t read = 0, rest = 0;
 
 	//0. privilege check and get directory name
-	if(check_privilege(cookie, group_id) != 0)
+#ifdef SMACK_GROUP_ID
+	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
 	{
 		SLOGE("[%s] permission denied\n", group_id);
 		return SS_PERMISSION_DENIED;
 	}
+#endif
 
 	// 1. create out file name
 	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, group_id);
@@ -577,7 +630,11 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	return 1;
 }
 
+#ifndef SMACK_GROUP_ID
 int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen, const char* filename, ssm_flag flag, const char* cookie, const char* group_id)
+#else
+int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen, const char* filename, ssm_flag flag, int sockfd, const char* group_id)
+#endif
 {
 	char key[16] = {0, };
 	unsigned char iv[16] = {0, };
@@ -601,12 +658,14 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	memcpy(buffer, writebuffer, bufLen);
 
 	//0. privilege check and get directory name
-	if(check_privilege(cookie, group_id) != 0)
+#ifdef SMACK_GROUP_ID
+	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
 	{
 		SLOGE("permission denied\n");
 		free(buffer);
 		return SS_PERMISSION_DENIED;
 	}
+#endif
 	
 	// create file path from filename
 	ConvertFileName(sender_pid, out_filepath, filename, flag, group_id); 
@@ -676,7 +735,11 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	return 1;
 }
 
+#ifndef SMACK_GROUP_ID
 int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, unsigned int count, unsigned int* readLen, ssm_flag flag, const char* cookie, const char* group_id)
+#else
+int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, unsigned int count, unsigned int* readLen, ssm_flag flag, int sockfd, const char* group_id)
+#endif
 {
 	unsigned int offset = count * MAX_RECV_DATA_LEN;
 	char key[16] = {0, };
@@ -692,11 +755,13 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	*readLen = 0;
 
 	//0. privilege check and get directory name
-	if(check_privilege(cookie, group_id) != 0)
+#ifdef SMACK_GROUP_ID
+	if(check_privilege_by_sockfd(sockfd, group_id, "r") != 0)
 	{
 		SLOGE("permission denied\n");
 		return SS_PERMISSION_DENIED;
 	}
+#endif
 
 	// 1. create in file name : convert file name in order to access secure storage
 	if(flag == SSM_FLAG_WIDGET)
@@ -757,18 +822,23 @@ Last:
 	return 1;
 }
 
+#ifndef SMACK_GROUP_ID
 int SsServerDeleteFile(int sender_pid, const char* data_filepath, ssm_flag flag, const char* cookie, const char* group_id)
+#else
+int SsServerDeleteFile(int sender_pid, const char* data_filepath, ssm_flag flag, int sockfd, const char* group_id)
+#endif
 {
 	const char* in_filepath = data_filepath;
 	char out_filepath[MAX_FILENAME_LEN] = {0, };
 
 	//0. privilege check and get directory name
-	if(check_privilege(cookie, group_id) != 0)
+#ifdef SMACK_GROUP_ID
+	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
 	{
 		SLOGE("permission denied\n");
 		return SS_PERMISSION_DENIED;
 	}
-
+#endif
 	// 1. create out file name
 	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, group_id);
 	
@@ -782,18 +852,24 @@ int SsServerDeleteFile(int sender_pid, const char* data_filepath, ssm_flag flag,
 	return 1;
 }
 
+#ifndef SMACK_GROUP_ID
 int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, ssm_flag flag, const char* cookie, const char* group_id)
+#else
+int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, ssm_flag flag, int sockfd, const char* group_id)
+#endif
 {
 	size_t read = 0;
 	FILE *fd_in = NULL;
 	char in_filepath[MAX_FILENAME_LEN] = {0, };
 
 	//0. privilege check and get directory name
-	if(check_privilege(cookie, group_id) != 0)
+#ifdef SMACK_GROUP_ID
+	if(check_privilege_by_sockfd(sockfd, group_id, "r") != 0)
 	{
 		SLOGE("permission denied, [%s]\n", group_id);
 		return SS_PERMISSION_DENIED;
 	}
+#endif
 	
 	// 1. create in file name : convert file name in order to access secure storage
 	if(flag == SSM_FLAG_WIDGET)

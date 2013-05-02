@@ -30,8 +30,13 @@
  *     - filepath
  *   @return type: int
  */
+#ifndef SMACK_GROUP_ID
 int SsServerDataStoreFromFile(int sender_pid, const char* filepath, ssm_flag flag, const char* cookie, const char* group_id);
 int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen, const char* filename, ssm_flag flag, const char* cookie, const char* group_id);
+#else
+int SsServerDataStoreFromFile(int sender_pid, const char* filepath, ssm_flag flag, int sockfd, const char* group_id);
+int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen, const char* filename, ssm_flag flag, int sockfd, const char* group_id);
+#endif
 
 /*
  * Declare new function
@@ -45,8 +50,11 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
  *     - redLen
  *   @return type: int
  */
+#ifndef SMACK_GROUP_ID
 int SsServerDataRead(int sender_pid, const char* filepath, char* pRetBuf, unsigned int count, unsigned int* readLen, ssm_flag flag, const char* cookie, const char* group_id);
-
+#else
+int SsServerDataRead(int sender_pid, const char* filepath, char* pRetBuf, unsigned int count, unsigned int* readLen, ssm_flag flag, int sockfd, const char* group_id);
+#endif
 /*
  * Declare new function
  *
@@ -57,5 +65,11 @@ int SsServerDataRead(int sender_pid, const char* filepath, char* pRetBuf, unsign
  *     - file_info
  *   @return type: int
  */
+ 
+#ifndef SMACK_GROUP_ID
 int SsServerGetInfo(int sender_pid, const char* filepath, char* file_info, ssm_flag flag, const char* cookie, const char* group_id);
 int SsServerDeleteFile(int sender_pid, const char* filepath, ssm_flag flag, const char* cookie, const char* group_id);
+#else
+int SsServerGetInfo(int sender_pid, const char* filepath, char* file_info, ssm_flag flag, int sockfd, const char* group_id);
+int SsServerDeleteFile(int sender_pid, const char* filepath, ssm_flag flag, int sockfd, const char* group_id);
+#endif

@@ -34,6 +34,7 @@ SET(debug_type "-DSS_DLOG_USE") 		# for debug - use dlog
 #SET(debug_type "") 						# for debug - DO NOT use
 SET(use_key "-DUSE_KEY_FILE")		# for private key - use key file
 #SET(use_key "-DUSE_NOT")			# for private key - use no private key, key will be fixed
+SET(smack_groupid "-DSMACK_GROUP_ID") # for group id sharing with smack label
 
 SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} -fvisibility=hidden")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
@@ -59,7 +60,7 @@ SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debu
 SET(ss-server_LDFLAGS ${pkgs_LDFLAGS})
 
 ADD_EXECUTABLE(ss-server ${ss-server_SOURCES})
-TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS})
+TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client)
 SET_TARGET_PROPERTIES(ss-server PROPERTIES COMPILE_FLAGS "${ss-server_CFLAGS}")
 ####################################################################################################
 

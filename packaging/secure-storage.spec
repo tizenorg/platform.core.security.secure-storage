@@ -9,6 +9,7 @@ Source1:    secure-storage.service
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
 #BuildRequires:  pkgconfig(libsystemd-daemon)
+BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
 
 %description
