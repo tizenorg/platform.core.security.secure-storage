@@ -238,6 +238,7 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 		{
 			SLOGD("defined smack label : %s", client_process_smack_label);
 			strncpy(object, client_process_smack_label, strlen(client_process_smack_label));
+			free(client_process_smack_label);
 		}
 		else
 		{
