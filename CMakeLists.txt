@@ -47,7 +47,7 @@ SET(libss-client_CFLAGS  " ${CFLAGS} -fPIC -I${ss_client_include_dir} -I${ss_inc
 #SET(libss-client_LIBADD " ${OPENSSL_LIBS} ")
 
 ADD_LIBRARY(ss-client SHARED ${libss-client_SOURCES})
-TARGET_LINK_LIBRARIES(ss-client ${pkgs_LDFLAGS})
+TARGET_LINK_LIBRARIES(ss-client ${pkgs_LDFLAGS} -ldukgenerator)
 SET_TARGET_PROPERTIES(ss-client PROPERTIES SOVERSION ${VERSION_MAJOR})
 SET_TARGET_PROPERTIES(ss-client PROPERTIES VERSION ${VERSION})
 SET_TARGET_PROPERTIES(ss-client PROPERTIES COMPILE_FLAGS "${libss-client_CFLAGS}")
@@ -60,7 +60,7 @@ SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debu
 SET(ss-server_LDFLAGS ${pkgs_LDFLAGS})
 
 ADD_EXECUTABLE(ss-server ${ss-server_SOURCES})
-TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client)
+TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client )
 SET_TARGET_PROPERTIES(ss-server PROPERTIES COMPILE_FLAGS "${ss-server_CFLAGS}")
 ####################################################################################################
 

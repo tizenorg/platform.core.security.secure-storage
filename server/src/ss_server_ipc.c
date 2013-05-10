@@ -157,7 +157,15 @@ int make_key_file()
 	}
 
 	fprintf(fp_key, "%s", key);
-	chmod(key_path, 0600);
+
+	if(chmod(key_path, 0600)!=0)
+	{
+		SLOGE("Secret key file chmod error, [%s]\n", strerror(errno));
+		free(key_path);
+		close(random_dev);
+		fclose(fp_key);
+		return 0;
+	}
 	
 	free(key_path);
 	fclose(fp_key);

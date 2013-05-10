@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <openssl/hmac.h> 
 
 #include <openssl/aes.h>
 #include <openssl/sha.h>

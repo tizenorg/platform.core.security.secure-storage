@@ -11,6 +11,7 @@ BuildRequires:  pkgconfig(dlog)
 #BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
+BuildRequires:  dukgenerator-devel
 
 %description
 Secure storage package
@@ -19,6 +20,7 @@ Secure storage package
 Summary:    Secure storage  (client)
 Group:      Development/Libraries
 Provides:   libss-client.so
+Requires:   dukgenerator
 
 %description -n libss-client
 Secure storage package (client)

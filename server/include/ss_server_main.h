@@ -65,7 +65,7 @@ int SsServerDataRead(int sender_pid, const char* filepath, char* pRetBuf, unsign
  *     - file_info
  *   @return type: int
  */
- 
+
 #ifndef SMACK_GROUP_ID
 int SsServerGetInfo(int sender_pid, const char* filepath, char* file_info, ssm_flag flag, const char* cookie, const char* group_id);
 int SsServerDeleteFile(int sender_pid, const char* filepath, ssm_flag flag, const char* cookie, const char* group_id);
@@ -73,3 +73,5 @@ int SsServerDeleteFile(int sender_pid, const char* filepath, ssm_flag flag, cons
 int SsServerGetInfo(int sender_pid, const char* filepath, char* file_info, ssm_flag flag, int sockfd, const char* group_id);
 int SsServerDeleteFile(int sender_pid, const char* filepath, ssm_flag flag, int sockfd, const char* group_id);
 #endif
+
+

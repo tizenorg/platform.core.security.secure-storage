@@ -66,3 +66,8 @@ int SsClientDataRead(const char* filepath, char* pRetBuf, size_t bufLen, size_t 
 int SsClientGetInfo(const char* filepath, ssm_file_info_t* sfi, ssm_flag flag, const char* group_id);
 
 int SsClientDeleteFile(const char* pFilePath, ssm_flag flag, const char* group_id);
+
+int SsClientEncrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen);
+
+int SsClientDecrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen);
+
