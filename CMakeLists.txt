@@ -13,7 +13,7 @@ SET(VERSION ${VERSION_MAJOR}.0.0)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED openssl dlog)
+pkg_check_modules(pkgs REQUIRED dukgenerator)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -47,7 +47,7 @@ SET(libss-client_CFLAGS  " ${CFLAGS} -fPIC -I${ss_client_include_dir} -I${ss_inc
 #SET(libss-client_LIBADD " ${OPENSSL_LIBS} ")
 
 ADD_LIBRARY(ss-client SHARED ${libss-client_SOURCES})
-TARGET_LINK_LIBRARIES(ss-client ${pkgs_LDFLAGS} -ldukgenerator)
+TARGET_LINK_LIBRARIES(ss-client ${pkgs_LDFLAGS})
 SET_TARGET_PROPERTIES(ss-client PROPERTIES SOVERSION ${VERSION_MAJOR})
 SET_TARGET_PROPERTIES(ss-client PROPERTIES VERSION ${VERSION})
 SET_TARGET_PROPERTIES(ss-client PROPERTIES COMPILE_FLAGS "${libss-client_CFLAGS}")

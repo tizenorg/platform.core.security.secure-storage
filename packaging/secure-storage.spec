@@ -11,7 +11,7 @@ BuildRequires:  pkgconfig(dlog)
 #BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
-BuildRequires:  dukgenerator-devel
+BuildRequires:  pkgconfig(dukgenerator)
 
 %description
 Secure storage package
