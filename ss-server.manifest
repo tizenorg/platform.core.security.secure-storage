@@ -1,6 +1,11 @@
 <manifest>
 	<define>
-		<domain name="secure-storage"/>
+	<domain name="secure-storage"/>
+		<provide>
+			<label name="secure-storage::mdm-limit-call"/>
+			<label name="secure-storage::mdm-limit-sms"/>
+			<label name="secure-storage::tethering"/>
+		</provide>
 	</define>
 	<request>
 		<domain name="secure-storage"/>

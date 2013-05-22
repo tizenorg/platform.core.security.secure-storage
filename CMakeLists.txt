@@ -56,7 +56,7 @@ SET_TARGET_PROPERTIES(ss-client PROPERTIES COMPILE_FLAGS "${libss-client_CFLAGS}
 ###################################################################################################
 ## for ss-server (binary)
 SET(ss-server_SOURCES ${ss_server_dir}/ss_server_ipc.c ${ss_server_dir}/ss_server_main.c)
-SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debug_type} ${use_key} ${OPENSSL_CFLAGS} -D_GNU_SOURCE ")
+SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debug_type} ${use_key} ${OPENSSL_CFLAGS} ${smack_groupid} -D_GNU_SOURCE ")
 SET(ss-server_LDFLAGS ${pkgs_LDFLAGS})
 
 ADD_EXECUTABLE(ss-server ${ss-server_SOURCES})
