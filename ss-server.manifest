@@ -5,6 +5,7 @@
 			<label name="secure-storage::mdm-limit-call"/>
 			<label name="secure-storage::mdm-limit-sms"/>
 			<label name="secure-storage::tethering"/>
+			<label name="secure-storage::activesync"/>
 		</provide>
 	</define>
 	<request>
