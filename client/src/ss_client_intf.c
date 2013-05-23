@@ -535,3 +535,53 @@ Error:
 		free(pDuk);
 	return result;
 }
+
+int SsClientEncryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen)
+{
+	int result = 0;
+	char duk[36] = {0,};
+	
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error");
+		result  = SS_PARAM_ERROR;
+		goto Final;
+	}
+
+	if(DoCipher(pBuffer, bufLen, ppEncryptedBuffer, pEncryptedBufLen, duk, 1) != 1)
+	{
+		SLOGE("failed to decrypt data");
+		result  = SS_ENCRYPTION_ERROR;
+		goto Final;
+	}
+	
+	result = 1;
+
+Final:
+	return result;
+}
+
+int SsClientDecryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen)
+{
+	int result = 0;
+	char duk[36] = {0,};
+	
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error");
+		result  = SS_PARAM_ERROR;
+		goto Final;
+	}
+
+	if(DoCipher(pBuffer, bufLen, ppDecryptedBuffer, pDecryptedBufLen, duk, 0) != 1)
+	{
+		SLOGE("failed to decrypt data");
+		result  = SS_DECRYPTION_ERROR;
+		goto Final;
+	}
+	
+	result = 1;
+
+Final:
+	return result;
+}

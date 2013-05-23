@@ -71,3 +71,5 @@ int SsClientEncrypt(const char* pAppId, int idLen, const char* pBuffer, int bufL
 
 int SsClientDecrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen);
 
+int SsClientEncryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen);
+int SsClientDecryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pEncryptedBufLen);
