@@ -15,7 +15,5 @@
 		<filesystem path="/etc/rc.d/init.d/ss-serverd" label="_" exec_label="none" />
 		<filesystem path="/etc/rc.d/rc3.d/S40ss-server" label="_" exec_label="none" />
 		<filesystem path="/etc/rc.d/rc5.d/S40ss-server" label="_" exec_label="none" />
-		<filesystem path="/usr/lib/systemd/system/secure-storage.service" label="_" exec_label="none" />
-		<filesystem path="/usr/lib/systemd/system/multi-user.target.wants/secure-storage.service" label="_" exec_label="none" />
 	</assign>
 </manifest>
