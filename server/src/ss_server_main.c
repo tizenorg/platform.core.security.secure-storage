@@ -225,21 +225,22 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 {
 	int ret = -1;	// if success, return 0
 	const char* private_group_id = "NOTUSED";
+	char* default_smack_label = NULL;
+	const char* group_id = object;
 
 	if(!IsSmackEnabled())
 	{
 		return 0;
 	}
 
-	if(!strncmp(object,"NOTUSED", strlen(private_group_id)))
+	if(!strncmp(group_id, private_group_id, strlen(private_group_id)))
 	{
-		SLOGD("requested default group_id :%s. get smack label", object);
-		char* client_process_smack_label = security_server_get_smacklabel_sockfd(sockfd);
-		if(client_process_smack_label)
+		SLOGD("requested default group_id. get smack label");
+		default_smack_label = security_server_get_smacklabel_sockfd(sockfd);
+		if(default_smack_label)
 		{
-			SLOGD("defined smack label : %s", client_process_smack_label);
-			strncpy(object, client_process_smack_label, strlen(client_process_smack_label));
-			free(client_process_smack_label);
+			SLOGD("defined smack label : %s", default_smack_label);
+			group_id = default_smack_label;
 		}
 		else
 		{
@@ -248,8 +249,13 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 		}
 	}
 
-	SLOGD("object : %s, access_rights : %s", object, access_rights);
-	ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+	SLOGD("object : %s, access_rights : %s", group_id, access_rights);
+	ret = security_server_check_privilege_by_sockfd(sockfd, group_id, access_rights);
+
+	if(default_smack_label)
+	{
+		free(default_smack_label);
+	}
 
 	return ret;
 }
