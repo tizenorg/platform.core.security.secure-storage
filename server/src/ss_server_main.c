@@ -348,7 +348,8 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 		int length_of_file = 0;
 		if(if_pointer != NULL)
 		{
-			strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
+			length_of_file = strlen(if_pointer);
+			strncat(dest, if_pointer + 1, length_of_file + 1);
 		}
 		strncat(dest, "_", 1);
 
