@@ -6,6 +6,7 @@
 			<label name="secure-storage::mdm-limit-sms"/>
 			<label name="secure-storage::tethering"/>
 			<label name="secure-storage::activesync"/>
+			<label name="secure-storage::divx-fragment"/>
 		</provide>
 	</define>
 	<request>
