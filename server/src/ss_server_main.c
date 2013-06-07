@@ -249,7 +249,7 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 		}
 	}
 
-	SLOGD("object : %s, access_rights : %s", group_id, access_rights);
+	SECURE_SLOGD("object : %s, access_rights : %s", group_id, access_rights);
 	ret = security_server_check_privilege_by_sockfd(sockfd, group_id, access_rights);
 
 	if(default_smack_label)
@@ -549,7 +549,7 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 #ifdef SMACK_GROUP_ID
 	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
 	{
-		SLOGE("[%s] permission denied\n", group_id);
+		SECURE_SLOGE("[%s] permission denied\n", group_id);
 		return SS_PERMISSION_DENIED;
 	}
 #endif
@@ -560,13 +560,13 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	// 2. file open 
 	if(!(fd_in = fopen(in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) %s\n", in_filepath);
+		SECURE_SLOGE("File open error:(in_filepath) %s\n", in_filepath);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 	
 	if(!(fd_out = fopen(out_filepath, "wb")))
 	{
-		SLOGE("File open error:(out_filepath) %s\n", out_filepath);
+		SECURE_SLOGE("File open error:(out_filepath) %s\n", out_filepath);
 		fclose(fd_in);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
@@ -682,7 +682,7 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	// open a file with write mode
 	if(!(fd_out = fopen(out_filepath, "wb")))
 	{
-		SLOGE("File open error:(out_filepath) %s\n", out_filepath);
+		SECURE_SLOGE("File open error:(out_filepath) %s\n", out_filepath);
 		free(buffer);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
@@ -781,7 +781,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	// 2. open file
 	if(!(fd_in = fopen(in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) %s\n", in_filepath);
+		SECURE_SLOGE("File open error:(in_filepath) %s\n", in_filepath);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 	
@@ -789,7 +789,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	if(fseek(fd_in, (long)offset + sizeof(ssm_file_info_t), SEEK_SET) < 0)
 	{
 	    int err_tmp = errno;
-	    SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
+	    SECURE_SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
 	    fclose(fd_in);
 	    return SS_FILE_OPEN_ERROR;  // file related error
 	}
@@ -875,7 +875,7 @@ int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, 
 #ifdef SMACK_GROUP_ID
 	if(check_privilege_by_sockfd(sockfd, group_id, "r") != 0)
 	{
-		SLOGE("permission denied, [%s]\n", group_id);
+		SECURE_SLOGE("permission denied, [%s]\n", group_id);
 		return SS_PERMISSION_DENIED;
 	}
 #endif
@@ -889,7 +889,7 @@ int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, 
 	// 1. open file
 	if(!(fd_in = fopen( in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
+		SECURE_SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 
