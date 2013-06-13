@@ -3,6 +3,7 @@
 Description=Start the Secure Storage server
 
 [Service]
+Type=notify
 ExecStartPre=-/bin/mkdir -p /csa
 ExecStart=/usr/bin/ss-server
 

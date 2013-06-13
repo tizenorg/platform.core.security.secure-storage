@@ -13,7 +13,7 @@ SET(VERSION ${VERSION_MAJOR}.0.0)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED dukgenerator)
+pkg_check_modules(pkgs REQUIRED dukgenerator libsystemd-daemon)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -73,3 +73,5 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/secure-storage.pc DESTINATION ${LIB_IN
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config DESTINATION share/secure-storage/)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/ss_manager.h DESTINATION include)
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/ss-serverd DESTINATION /etc/rc.d/init.d)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.service DESTINATION /usr/lib/systemd/system)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.socket DESTINATION /usr/lib/systemd/system)

@@ -5,10 +5,9 @@ Release:    4
 Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
-Source1:    secure-storage.service
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
-#BuildRequires:  pkgconfig(libsystemd-daemon)
+BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dukgenerator)
@@ -59,8 +58,9 @@ make %{?jobs:-j%jobs}
 %make_install
 
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants
-install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system/secure-storage.service
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants
 ln -s ../secure-storage.service %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
+ln -s ../secure-storage.socket %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants/secure-storage.socket
 
 mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc3.d
 mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc5.d
@@ -98,6 +98,8 @@ systemctl daemon-reload
 %{_bindir}/ss-server
 %{_prefix}/lib/systemd/system/secure-storage.service
 %{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
+%{_prefix}/lib/systemd/system/secure-storage.socket
+%{_prefix}/lib/systemd/system/sockets.target.wants/secure-storage.socket
 %{_datadir}/secure-storage/config
 /usr/share/license/ss-server
 
