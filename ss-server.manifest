@@ -14,8 +14,5 @@
 		<domain name="secure-storage"/>
 	</request>
 	<assign>
-		<filesystem path="/etc/rc.d/init.d/ss-serverd" label="_" exec_label="none" />
-		<filesystem path="/etc/rc.d/rc3.d/S40ss-server" label="_" exec_label="none" />
-		<filesystem path="/etc/rc.d/rc5.d/S40ss-server" label="_" exec_label="none" />
 	</assign>
 </manifest>

@@ -62,11 +62,6 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants
 ln -s ../secure-storage.service %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
 ln -s ../secure-storage.socket %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants/secure-storage.socket
 
-mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc3.d
-mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc5.d
-ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc3.d/S40ss-server
-ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc5.d/S40ss-server
-
 mkdir -p %{buildroot}/usr/share/license
 cp LICENSE.APLv2 %{buildroot}/usr/share/license/ss-server
 cp LICENSE.APLv2 %{buildroot}/usr/share/license/libss-client
@@ -92,9 +87,6 @@ systemctl daemon-reload
 %files -n ss-server
 %manifest ss-server.manifest
 %defattr(-,root,root,-)
-%attr(0755,root,root) %{_sysconfdir}/rc.d/init.d/ss-serverd
-%{_sysconfdir}/rc.d/rc3.d/S40ss-server
-%{_sysconfdir}/rc.d/rc5.d/S40ss-server
 %{_bindir}/ss-server
 %{_prefix}/lib/systemd/system/secure-storage.service
 %{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
