@@ -7,6 +7,7 @@
 			<label name="secure-storage::tethering"/>
 			<label name="secure-storage::activesync"/>
 			<label name="secure-storage::divx-fragment"/>
+			<label name="secure-storage::google-sync"/>
 		</provide>
 	</define>
 	<request>
