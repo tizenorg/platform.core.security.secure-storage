@@ -268,7 +268,7 @@ Last :
 		goto Free_and_Error;
 	}
 
-	SECURE_SLOGE("Decrypted file name : %s\n", recv_data.data_filepath);
+	SLOGE("Decrypted file name : %s\n", recv_data.data_filepath);
 Free_and_Error:
 	free(send_data);
 Error:
@@ -412,7 +412,7 @@ int SsClientDeleteFile(const char *pFilePath, ssm_flag flag, const char* group_i
 Free_and_Error:
 	free(send_data);
 
-	SECURE_SLOGE("Deleted file name: %s\n", recv_data.data_filepath);
+	SLOGE("Deleted file name: %s\n", recv_data.data_filepath);
 	
 Error:
 	return recv_data.rsp_type;
