@@ -45,6 +45,8 @@ typedef enum {
 	SSM_FLAG_SECRET_PRESERVE,	// for preserved operation
 	SSM_FLAG_SECRET_OPERATION,	// for oma drm , wifi addr, divx and bt addr
 	SSM_FLAG_WIDGET, // for wiget encryption/decryption
+	SSM_FLAG_WEB_APP,
+	SSM_FLAG_PRELOADED_WEB_APP,
 	SSM_FLAG_MAX
 } ssm_flag;
 
