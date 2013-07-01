@@ -6,6 +6,7 @@ Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
 Source1:    secure-storage.service
+Source1001: 	secure-storage.manifest
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
 #BuildRequires:  pkgconfig(libsystemd-daemon)
@@ -45,6 +46,7 @@ Secure storage package (ss-server)
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 
 %build
@@ -88,7 +90,7 @@ systemctl daemon-reload
 %postun -n libss-client -p /sbin/ldconfig
 
 %files -n ss-server
-%manifest ss-server.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %attr(0755,root,root) %{_sysconfdir}/rc.d/init.d/ss-serverd
 %{_sysconfdir}/rc.d/rc3.d/S40ss-server
@@ -100,12 +102,13 @@ systemctl daemon-reload
 /usr/share/license/ss-server
 
 %files -n libss-client
-%manifest libss-client.manifest
+%manifest %{name}.manifest
 %defattr(-,root,root)
 %{_libdir}/libss-client.so.*
 /usr/share/license/libss-client
 
 %files -n libss-client-devel
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_includedir}/ss_manager.h
 %{_libdir}/pkgconfig/secure-storage.pc
