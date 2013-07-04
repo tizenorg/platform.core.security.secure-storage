@@ -103,7 +103,7 @@ int check_key_file()
 
 	if(!(fp_key = fopen(key_path, "r")))
 	{
-		SLOGE("Secret key file is not exist, [%s]\n", key_path);
+		SECURE_SLOGE("Secret key file is not exist, [%s]\n", key_path);
 		free(key_path);
 		return 0;
 	}
@@ -150,7 +150,7 @@ int make_key_file()
 
 	if(!(fp_key = fopen(key_path, "w")))
 	{
-		SLOGE("Secret key file Open error, [%s]\n", key_path);
+		SECURE_SLOGE("Secret key file Open error, [%s]\n", key_path);
 		free(key_path);
 		close(random_dev);
 		return 0;

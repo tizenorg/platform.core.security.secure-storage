@@ -210,7 +210,7 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 		return 0;
 
 	int ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
-	SLOGD("object : %s, access_rights : %s, ret : %d", object, access_rights, ret);
+	SECURE_SLOGD("object : %s, access_rights : %s, ret : %d", object, access_rights, ret);
 	return ret;
 }
 
@@ -248,7 +248,7 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 			return SS_FILE_OPEN_ERROR;
 		}
 		// TBD
-		strncpy(dest, SS_STORAGE_DEFAULT_PATH, strlen(SS_STORAGE_DEFAULT_PATH));
+		strncpy(dest, SS_STORAGE_DEFAULT_PATH, strlen(SS_STORAGE_DEFAULT_PATH) + 1);
 	}
 
 	strncat(dest, dir, (strlen(dir))); 	// add top-dir + dir(label)
@@ -265,7 +265,7 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 	strncat(dest, s, strlen(s)); 	// /top-dir/label/_hash
 	strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX)); 	// /top-dir/label/_hash.e
 
-	SLOGD("final dest : %s", dest);
+	SECURE_SLOGD("final dest : %s", dest);
 
 	return 1;
 }
@@ -278,7 +278,7 @@ int GetProcessExecPath(int pid, char* buffer)
 
 	if(!(fp_proc = fopen(tmp_cmd, "r")))
 	{
-		SLOGE("file open error: [%s]", tmp_cmd);
+		SECURE_SLOGE("file open error: [%s]", tmp_cmd);
 		return SS_FILE_OPEN_ERROR;
 	}
 
@@ -301,7 +301,7 @@ int GetProcessSmackLabel(int sockfd, char* proc_smack_label)
 		SLOGE("failed to get smack label");
 		return -1; // SS_SECURITY_SERVER_ERROR?
 	}
-	SLOGD("defined smack label : %s", proc_smack_label);
+	SECURE_SLOGD("defined smack label : %s", proc_smack_label);
 	return 0;
 }
 
@@ -315,7 +315,7 @@ int GetPathHash(const char *src, char *output)
 	memset(output, 0x00, 34);
 	snprintf(output, 34, "%u", h_code);
 
-	SLOGD("hashing src : %s to output : %s", src, output);
+	SECURE_SLOGD("hashing src : %s to output : %s", src, output);
 
 	return 0;
 }
@@ -327,7 +327,7 @@ int CreateStorageDir(const char* path)
 
 	if (is_dir_exist == 0) // path directory is not exist
 	{
-		SLOGI("directory [%s] is making now.\n", path);
+		SECURE_SLOGI("directory [%s] is making now.\n", path);
 		if(mkdir(path, 0700) < 0)	// fail to make directory
 		{
 			SLOGE("[%s] cannot be made\n", SS_STORAGE_DEFAULT_PATH);
@@ -558,15 +558,6 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	unsigned char e_text[ENCRYPT_SIZE] = {0, };
 	int res = -1;
 
-	writeLen = (unsigned int)(bufLen / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
-	buffer = (char*)malloc(writeLen + 1);
-	if(!buffer)
-	{
-		SLOGE("Memory Allocation Fail in SsServerDataStoreFromBuffer()..\n");
-		return SS_MEMORY_ERROR;
-	}
-	memset(buffer, 0x00, writeLen);
-	memcpy(buffer, writebuffer, bufLen);
 
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
@@ -589,6 +580,16 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 
 	// create file path from filename
 	ConvertFileName(sender_pid, out_filepath, filename, flag, dir);
+
+	writeLen = (unsigned int)(bufLen / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
+	buffer = (char*)malloc(writeLen + 1);
+	if(!buffer)
+	{
+		SLOGE("Memory Allocation Fail in SsServerDataStoreFromBuffer()..\n");
+		return SS_MEMORY_ERROR;
+	}
+	memset(buffer, 0x00, writeLen);
+	memcpy(buffer, writebuffer, bufLen);
 
 	// open a file with write mode
 	if(!(fd_out = fopen(out_filepath, "wb")))
