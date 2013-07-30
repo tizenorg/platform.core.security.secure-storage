@@ -192,7 +192,7 @@ int IsDirExist(const char* dirpath)
 	
 	if((dp = opendir(dirpath)) == NULL) // dir is not exist
 	{
-		SLOGE("directory [%s] is not exist.\n", dirpath);
+		SECURE_SLOGE("directory [%s] is not exist.\n", dirpath);
 		return 0; // return value '0' represents dir is not exist
 	}
 	else
@@ -558,7 +558,6 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	unsigned char e_text[ENCRYPT_SIZE] = {0, };
 	int res = -1;
 
-
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
@@ -594,7 +593,7 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	// open a file with write mode
 	if(!(fd_out = fopen(out_filepath, "wb")))
 	{
-		SLOGE("File open error:(out_filepath) %s\n", out_filepath);
+		SECURE_SLOGE("File open error:(out_filepath) %s\n", out_filepath);
 		free(buffer);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
@@ -701,7 +700,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	// 2. open file
 	if(!(fd_in = fopen(in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) %s\n", in_filepath);
+		SECURE_SLOGE("File open error:(in_filepath) %s\n", in_filepath);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 	
@@ -709,7 +708,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	if(fseek(fd_in, (long)offset + sizeof(ssm_file_info_t), SEEK_SET) < 0)
 	{
 	    int err_tmp = errno;
-	    SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
+	    SECURE_SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
 	    fclose(fd_in);
 	    return SS_FILE_OPEN_ERROR;  // file related error
 	}
@@ -830,7 +829,7 @@ int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, 
 	// 1. open file
 	if(!(fd_in = fopen( in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
+		SECURE_SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 
