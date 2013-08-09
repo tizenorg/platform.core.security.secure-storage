@@ -8,6 +8,8 @@
 			<label name="secure-storage::activesync"/>
 			<label name="secure-storage::divx-fragment"/>
 			<label name="secure-storage::google-sync"/>
+			<label name="secure-storage::facebook"/>
+			<label name="secure-storage::telephony_sim"/>
 		</provide>
 	</define>
 	<request>
