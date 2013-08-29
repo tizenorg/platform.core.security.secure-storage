@@ -1,0 +1,20 @@
+<manifest>
+	<define>
+	<domain name="secure-storage"/>
+		<provide>
+			<label name="secure-storage::mdm-limit-call"/>
+			<label name="secure-storage::mdm-limit-sms"/>
+			<label name="secure-storage::tethering"/>
+			<label name="secure-storage::activesync"/>
+			<label name="secure-storage::divx-fragment"/>
+			<label name="secure-storage::google-sync"/>
+			<label name="secure-storage::facebook"/>
+			<label name="secure-storage::telephony_sim"/>
+		</provide>
+	</define>
+	<request>
+		<domain name="secure-storage"/>
+	</request>
+	<assign>
+	</assign>
+</manifest>

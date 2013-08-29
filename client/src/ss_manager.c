@@ -212,3 +212,105 @@ int ssm_delete_file(const char *pFilePath, ssm_flag flag, const char* group_id)
 Error:
 	return -(ret);
 }
+
+SS_API
+int ssm_encrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen)
+{
+	int ret = 0;
+
+	if(!pAppId || idLen == 0 || !pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error.\n");
+		ret = SS_PARAM_ERROR;
+		goto Error;
+	}
+
+	ret = SsClientEncrypt(pAppId, idLen, pBuffer, bufLen, ppEncryptedBuffer, pEncryptedBufLen);
+
+	if(ret == 1)	// success
+	{
+		SLOGI("Application encryption succeeded.\n");
+		return 0;
+	}
+	else	// fail
+		SLOGE("Application encryption failed.\n");
+
+Error:
+	return -(ret);
+}
+
+SS_API
+int ssm_decrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen)
+{
+	int ret = 0;
+
+	if(!pAppId || idLen == 0 || !pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error.\n");
+		ret = SS_PARAM_ERROR;
+		goto Error;
+	}
+
+	ret = SsClientDecrypt(pAppId, idLen, pBuffer, bufLen, ppDecryptedBuffer, pDecryptedBufLen);
+
+	if(ret == 1)	// success
+	{
+		SLOGI("Application decryption succeeded.\n");
+		return 0;
+	}
+	else	// fail
+		SLOGE("Application decryption failed.\n");
+
+Error:
+	return -(ret);
+}
+
+SS_API
+int ssm_encrypt_preloaded_application(const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen)
+{
+	int ret = 0;
+	
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error.\n");
+		ret = SS_PARAM_ERROR;
+		goto Error;
+	}
+
+	ret = SsClientEncryptPreloadedApplication(pBuffer, bufLen, ppEncryptedBuffer, pEncryptedBufLen);
+	if(ret == 1)	// success
+	{
+		SLOGI("Application decryption succeeded.\n");
+		return 0;
+	}
+	else	// fail
+		SLOGE("Application decryption failed.\n");
+
+Error:
+	return -(ret);
+}
+
+SS_API
+int ssm_decrypt_preloaded_application(const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen)
+{
+	int ret = 0;
+
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error.\n");
+		ret = SS_PARAM_ERROR;
+		goto Error;
+	}
+
+	ret = SsClientDecryptPreloadedApplication(pBuffer, bufLen, ppDecryptedBuffer, pDecryptedBufLen);
+	if(ret == 1)	// success
+	{
+		SLOGI("Application decryption succeeded.\n");
+		return 0;
+	}
+	else	// fail
+		SLOGE("Application decryption failed.\n");
+
+Error:
+	return -(ret);
+}

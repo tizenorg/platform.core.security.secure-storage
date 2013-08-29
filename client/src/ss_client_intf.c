@@ -23,11 +23,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <openssl/evp.h>
+#include <openssl/crypto.h>
 
 #include "secure_storage.h"
 #include "ss_client_intf.h"
 #include "ss_client_ipc.h"
 #include "ss_manager.h"
+
+#include <dukgen.h>
 
 int SsClientDataStoreFromFile(const char* filepath, ssm_flag flag, const char* group_id)
 {
@@ -264,7 +268,7 @@ Last :
 		goto Free_and_Error;
 	}
 
-	SLOGE("Decrypted file name : %s\n", recv_data.data_filepath);
+	SECURE_SLOGD("Decrypted file name : %s\n", recv_data.data_filepath);
 Free_and_Error:
 	free(send_data);
 Error:
@@ -408,8 +412,176 @@ int SsClientDeleteFile(const char *pFilePath, ssm_flag flag, const char* group_i
 Free_and_Error:
 	free(send_data);
 
-	SLOGE("Deleted file name: %s\n", recv_data.data_filepath);
+	SECURE_SLOGD("Deleted file name: %s\n", recv_data.data_filepath);
 	
 Error:
 	return recv_data.rsp_type;
+}
+
+
+//////////////////////////////
+__attribute__((visibility("hidden")))
+int DoCipher(const char* pInputBuf, int inputLen, char** ppOutBuf, int* pOutBufLen, char* pKey, int encryption)
+{
+	static const unsigned char iv[16] = {0xbd, 0xc3, 0xc5, 0xa5, 0xb8, 0xae, 0xc6, 0xbc, 0x20, 0xb3, 0xeb, 0xb0, 0xe6, 0xbf, 0xec, 0x20};
+	struct evp_cipher_st* pCipherAlgorithm = NULL;
+	EVP_CIPHER_CTX cipherCtx;
+	int tempLen = 0;
+	int result = 0;
+	int finalLen = 0;
+
+	pCipherAlgorithm = EVP_aes_256_cbc();
+	tempLen =  (int)((inputLen / pCipherAlgorithm->block_size + 1) * pCipherAlgorithm->block_size);
+
+	*ppOutBuf = (char*)calloc(tempLen, 1);
+	EVP_CIPHER_CTX_init(&cipherCtx);
+
+	result = EVP_CipherInit(&cipherCtx, pCipherAlgorithm, (const unsigned char*)pKey, iv, encryption);
+	if(result != 1)
+	{
+		SLOGE("[%s] EVP_CipherInit failed", result);
+		goto Error;
+	}
+
+	result = EVP_CIPHER_CTX_set_padding(&cipherCtx, 1);
+	if(result != 1)
+	{
+		SLOGE("[%d] EVP_CIPHER_CTX_set_padding failed", result);
+		goto Error;
+	}
+
+    //cipher update operation
+    result = EVP_CipherUpdate(&cipherCtx, (unsigned char*)*ppOutBuf, pOutBufLen, (const unsigned char*)pInputBuf, inputLen);
+	if(result != 1)
+	{
+		SLOGE("[%d] EVP_CipherUpdate failed", result);
+		goto Error;
+	}
+
+    //cipher final operation
+    result = EVP_CipherFinal(&cipherCtx, (unsigned char*)*ppOutBuf + *pOutBufLen, &finalLen);
+	if(result != 1)
+	{
+		SLOGE("[%d] EVP_CipherFinal failed", result);
+		goto Error;
+	}
+    *pOutBufLen = *pOutBufLen + finalLen;
+	goto Last;
+Error:
+	result = SS_ENCRYPTION_ERROR;
+	free(*ppOutBuf);
+
+Last:
+	EVP_CIPHER_CTX_cleanup(&cipherCtx);
+	if((result != 1) && (encryption != 1))
+		result = SS_DECRYPTION_ERROR;
+	
+	return result;
+}
+
+int SsClientEncrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen)
+{
+	int result = 1;
+	char* pDuk = NULL;
+	
+	if(!pAppId || idLen == 0 || !pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error in SsClientEncrypt");
+		result = SS_PARAM_ERROR;
+		goto Error;
+	}
+	
+	pDuk = GetDeviceUniqueKey(pAppId, idLen, 32);
+
+	if(DoCipher(pBuffer, bufLen, ppEncryptedBuffer, pEncryptedBufLen, pDuk, 1) != 1)
+	{
+		SLOGE("failed to encrypt data");
+		result = SS_ENCRYPTION_ERROR;
+		goto Error;
+	}
+
+	result = 1;
+
+Error:
+	if(pDuk)
+		free(pDuk);
+	return result;
+}
+
+int SsClientDecrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen)
+{
+	int result = 1;
+	char* pDuk = NULL;
+
+	if(!pAppId || idLen == 0 || !pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error in SsClientDecrypt");
+		result = SS_PARAM_ERROR;
+		goto Error;
+	}
+
+	pDuk = GetDeviceUniqueKey(pAppId, idLen, 32);
+
+	if(DoCipher(pBuffer, bufLen, ppDecryptedBuffer, pDecryptedBufLen, pDuk, 0) != 1)
+	{
+		SLOGE("failed to decrypt data\n");
+		result = SS_DECRYPTION_ERROR;
+		goto Error;
+	}
+	result = 1;
+
+Error:
+	if(pDuk)
+		free(pDuk);
+	return result;
+}
+
+int SsClientEncryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen)
+{
+	int result = 0;
+	char duk[36] = {0,};
+	
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error");
+		result  = SS_PARAM_ERROR;
+		goto Final;
+	}
+
+	if(DoCipher(pBuffer, bufLen, ppEncryptedBuffer, pEncryptedBufLen, duk, 1) != 1)
+	{
+		SLOGE("failed to decrypt data");
+		result  = SS_ENCRYPTION_ERROR;
+		goto Final;
+	}
+	
+	result = 1;
+
+Final:
+	return result;
+}
+
+int SsClientDecryptPreloadedApplication(const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen)
+{
+	int result = 0;
+	char duk[36] = {0,};
+	
+	if(!pBuffer || bufLen ==0)
+	{
+		SLOGE("Parameter error");
+		result  = SS_PARAM_ERROR;
+		goto Final;
+	}
+
+	if(DoCipher(pBuffer, bufLen, ppDecryptedBuffer, pDecryptedBufLen, duk, 0) != 1)
+	{
+		SLOGE("failed to decrypt data");
+		result  = SS_DECRYPTION_ERROR;
+		goto Final;
+	}
+	
+	result = 1;
+
+Final:
+	return result;
 }

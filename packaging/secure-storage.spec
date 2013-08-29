@@ -5,15 +5,15 @@ Release:    4
 Group:      System/Security
 License:    Apache 2.0
 Source0:    secure-storage-%{version}.tar.gz
-Source1:    secure-storage.service
 Source1001:	libss-client.manifest
 Source1002:	libss-client-devel.manifest
 Source1003:	ss-server.manifest
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
-#BuildRequires:  pkgconfig(libsystemd-daemon)
+BuildRequires:  pkgconfig(libsystemd-daemon)
 BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
+BuildRequires:  pkgconfig(dukgenerator)
 
 %description
 Secure storage package
@@ -22,6 +22,7 @@ Secure storage package
 Summary:    Secure storage  (client)
 Group:      Development/Libraries
 Provides:   libss-client.so
+Requires:   dukgenerator
 
 %description -n libss-client
 Secure storage package (client)
@@ -61,13 +62,9 @@ make %{?jobs:-j%jobs}
 %make_install
 
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants
-install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system/secure-storage.service
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants
 ln -s ../secure-storage.service %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
-
-mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc3.d
-mkdir -p %{buildroot}%{_sysconfdir}/rc.d/rc5.d
-ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc3.d/S40ss-server
-ln -s ../init.d/ss-serverd %{buildroot}%{_sysconfdir}/rc.d/rc5.d/S40ss-server
+ln -s ../secure-storage.socket %{buildroot}%{_prefix}/lib/systemd/system/sockets.target.wants/secure-storage.socket
 
 mkdir -p %{buildroot}/usr/share/license
 cp LICENSE.APLv2 %{buildroot}/usr/share/license/ss-server
@@ -94,12 +91,11 @@ systemctl daemon-reload
 %files -n ss-server
 %manifest ss-server.manifest
 %defattr(-,root,root,-)
-%attr(0755,root,root) %{_sysconfdir}/rc.d/init.d/ss-serverd
-%{_sysconfdir}/rc.d/rc3.d/S40ss-server
-%{_sysconfdir}/rc.d/rc5.d/S40ss-server
 %{_bindir}/ss-server
 %{_prefix}/lib/systemd/system/secure-storage.service
 %{_prefix}/lib/systemd/system/multi-user.target.wants/secure-storage.service
+%{_prefix}/lib/systemd/system/secure-storage.socket
+%{_prefix}/lib/systemd/system/sockets.target.wants/secure-storage.socket
 %{_datadir}/secure-storage/config
 /usr/share/license/ss-server
 

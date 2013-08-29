@@ -13,7 +13,7 @@ SET(VERSION ${VERSION_MAJOR}.0.0)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(pkgs REQUIRED openssl dlog)
+pkg_check_modules(pkgs REQUIRED dukgenerator libsystemd-daemon)
 
 FOREACH(flag ${pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
@@ -56,11 +56,11 @@ SET_TARGET_PROPERTIES(ss-client PROPERTIES COMPILE_FLAGS "${libss-client_CFLAGS}
 ###################################################################################################
 ## for ss-server (binary)
 SET(ss-server_SOURCES ${ss_server_dir}/ss_server_ipc.c ${ss_server_dir}/ss_server_main.c)
-SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debug_type} ${use_key} ${OPENSSL_CFLAGS} -D_GNU_SOURCE ")
+SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debug_type} ${use_key} ${OPENSSL_CFLAGS} ${smack_groupid} -D_GNU_SOURCE ")
 SET(ss-server_LDFLAGS ${pkgs_LDFLAGS})
 
 ADD_EXECUTABLE(ss-server ${ss-server_SOURCES})
-TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client)
+TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client )
 SET_TARGET_PROPERTIES(ss-server PROPERTIES COMPILE_FLAGS "${ss-server_CFLAGS}")
 ####################################################################################################
 
@@ -72,4 +72,5 @@ INSTALL(PROGRAMS ${CMAKE_BINARY_DIR}/ss-server DESTINATION bin)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/secure-storage.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config DESTINATION share/secure-storage/)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/ss_manager.h DESTINATION include)
-INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/ss-serverd DESTINATION /etc/rc.d/init.d)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.service DESTINATION /usr/lib/systemd/system)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.socket DESTINATION /usr/lib/systemd/system)

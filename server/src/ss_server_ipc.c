@@ -32,7 +32,7 @@
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-
+#include <systemd/sd-daemon.h>
 #include "secure_storage.h"
 #include "ss_server_ipc.h"
 #include "ss_server_main.h"
@@ -103,7 +103,7 @@ int check_key_file()
 
 	if(!(fp_key = fopen(key_path, "r")))
 	{
-		SLOGE("Secret key file is not exist, [%s]\n", key_path);
+		SECURE_SLOGE("Secret key file is not exist, [%s]\n", key_path);
 		free(key_path);
 		return 0;
 	}
@@ -150,14 +150,22 @@ int make_key_file()
 
 	if(!(fp_key = fopen(key_path, "w")))
 	{
-		SLOGE("Secret key file Open error, [%s]\n", key_path);
+		SECURE_SLOGE("Secret key file Open error, [%s]\n", key_path);
 		free(key_path);
 		close(random_dev);
 		return 0;
 	}
 
 	fprintf(fp_key, "%s", key);
-	chmod(key_path, 0600);
+
+	if(chmod(key_path, 0600)!=0)
+	{
+		SLOGE("Secret key file chmod error, [%s]\n", strerror(errno));
+		free(key_path);
+		close(random_dev);
+		fclose(fp_key);
+		return 0;
+	}
 	
 	free(key_path);
 	fclose(fp_key);
@@ -191,45 +199,67 @@ void SsServerComm(void)
 
 	server_sockfd = client_sockfd = -1;
 
-	if((server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
+	int number_fds = sd_listen_fds(1);
+	if (number_fds > 1)
 	{
-		SLOGE("Error in function socket()..\n");
-		send_data.rsp_type = SS_SOCKET_ERROR;	// ipc error
+		SLOGE("Too many file descriptors received..\n");
+		send_data.rsp_type = SS_SOCKET_ERROR;   // ipc error
 		goto Error_exit;
 	}
-
-	temp_len_sock = strlen(SS_SOCK_PATH);
-	
-	bzero(&serveraddr, sizeof(serveraddr));
-	serveraddr.sun_family = AF_UNIX;
-	strncpy(serveraddr.sun_path, SS_SOCK_PATH, temp_len_sock);
-	serveraddr.sun_path[temp_len_sock] = '\0';
-
-	if((bind(server_sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr))) < 0)
+	if (number_fds == 1)
 	{
-		unlink("/tmp/SsSocket");
+		int r;
+		if ((r = sd_is_socket_unix(SD_LISTEN_FDS_START, SOCK_STREAM, 1, SS_SOCK_PATH, 0)) <= 0)
+		{
+			SLOGE("The file descriptor received from systemd is of a wrong type.\n");
+			send_data.rsp_type = SS_SOCKET_ERROR;   // ipc error
+			goto Error_exit;
+		}
+		server_sockfd = SD_LISTEN_FDS_START + 0;
+	}
+	else
+	{
+		if((server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
+		{
+			SLOGE("Error in function socket()..\n");
+			send_data.rsp_type = SS_SOCKET_ERROR;	// ipc error
+			goto Error_exit;
+		}
+
+		temp_len_sock = strlen(SS_SOCK_PATH);
+
+		memset(&serveraddr, '0', sizeof(serveraddr));
+		serveraddr.sun_family = AF_UNIX;
+		strncpy(serveraddr.sun_path, SS_SOCK_PATH, temp_len_sock);
+		serveraddr.sun_path[temp_len_sock] = '\0';
+
 		if((bind(server_sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr))) < 0)
 		{
-			SLOGE("Error in function bind()..\n");
+			unlink(SS_SOCK_PATH);
+			if((bind(server_sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr))) < 0)
+			{
+				SLOGE("Error in function bind()..\n");
+				send_data.rsp_type = SS_SOCKET_ERROR;	// ipc error
+				goto Error_close_exit;
+			}
+		}
+
+		if(chmod(SS_SOCK_PATH, S_IRWXU | S_IRWXG | S_IRWXO) != 0)
+		{
+			send_data.rsp_type = SS_SOCKET_ERROR;
+			goto Error_close_exit;
+		}
+
+		if((listen(server_sockfd, 5)) < 0)
+		{
+			SLOGE("Error in function listen()..\n");
 			send_data.rsp_type = SS_SOCKET_ERROR;	// ipc error
 			goto Error_close_exit;
 		}
 	}
 
-	if(chmod(SS_SOCK_PATH, S_IRWXU | S_IRWXG | S_IRWXO) != 0)
-	{
-		send_data.rsp_type = SS_SOCKET_ERROR;
-		goto Error_close_exit;
-	}
-
-	if((listen(server_sockfd, 5)) < 0)
-	{
-		SLOGE("Error in function listen()..\n");
-		send_data.rsp_type = SS_SOCKET_ERROR;	// ipc error
-		goto Error_close_exit;
-	}
-
 	signal(SIGINT, (void*)SigHandler);
+	sd_notify(0, "READY=1");
 	
 	while(1) 
 	{

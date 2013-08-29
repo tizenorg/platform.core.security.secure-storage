@@ -45,6 +45,8 @@ typedef enum {
 	SSM_FLAG_SECRET_PRESERVE,	// for preserved operation
 	SSM_FLAG_SECRET_OPERATION,	// for oma drm , wifi addr, divx and bt addr
 	SSM_FLAG_WIDGET, // for wiget encryption/decryption
+	SSM_FLAG_WEB_APP,
+	SSM_FLAG_PRELOADED_WEB_APP,
 	SSM_FLAG_MAX
 } ssm_flag;
 
@@ -74,6 +76,7 @@ typedef struct {
 #define		SS_SIZE_ERROR					0x0000000b	// 11
 #define		SS_SECURE_STORAGE_ERROR			0x0000000c	// 12
 #define		SS_PERMISSION_DENIED			0x0000000d	// 13
+#define		SS_TZ_ERROR						0x0000000e	// 14
 
 #ifdef __cplusplus
 extern "C" {
@@ -386,6 +389,15 @@ int ssm_getinfo(const char* pFilePath, ssm_file_info_t* sfi, ssm_flag flag, cons
  */
 /*================================================================================================*/
 int ssm_delete_file(const char* pFilePath, ssm_flag flag, const char* group_id);
+
+//for wrt installer
+/*================================================================================================*/
+int ssm_encrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen);
+int ssm_decrypt(const char* pAppId, int idLen, const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen);
+
+int ssm_encrypt_preloaded_application(const char* pBuffer, int bufLen, char** ppEncryptedBuffer, int* pEncryptedBufLen);
+int ssm_decrypt_preloaded_application(const char* pBuffer, int bufLen, char** ppDecryptedBuffer, int* pDecryptedBufLen); 
+
 
 #ifdef __cplusplus
 }

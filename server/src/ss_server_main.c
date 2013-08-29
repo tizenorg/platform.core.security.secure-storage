@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <openssl/hmac.h> 
 
 #include <openssl/aes.h>
 #include <openssl/sha.h>
@@ -112,7 +113,7 @@ char* get_preserved_dir()
 int IsSmackEnabled()
 {
 	FILE *file = NULL;
-	if(file = fopen("/smack/load2", "r"))
+	if((file = fopen("/smack/load2", "r")))
 	{
 		fclose(file);
 		return 1;
@@ -185,13 +186,13 @@ unsigned short GetHashCode(const unsigned char* pString)
 	return hash;
 }
 
-int IsDirExist(char* dirpath)
+int IsDirExist(const char* dirpath)
 {
 	DIR* dp = NULL;
 	
 	if((dp = opendir(dirpath)) == NULL) // dir is not exist
 	{
-		SLOGE("directory [%s] is not exist.\n", dirpath);
+		SECURE_SLOGE("directory [%s] is not exist.\n", dirpath);
 		return 0; // return value '0' represents dir is not exist
 	}
 	else
@@ -203,69 +204,21 @@ int IsDirExist(char* dirpath)
 	return -1;
 }
 
-int check_privilege(const char* cookie, const char* group_id)
-{
-//	int ret = -1;	// if success, return 0
-//	int gid = -1;
-	
-//	if(!strncmp(group_id, "NOTUSED", 7))	// group_id is NULL
-//		return 0;
-//	else
-//	{
-//		gid = security_server_get_gid(group_id);
-//		ret = security_server_check_privilege(cookie, gid);
-//	}
-
-//	return ret;
-	return 0; // success always
-}
-
 int check_privilege_by_sockfd(int sockfd, const char* object, const char* access_rights)
 {
-	int ret = -1;	// if success, return 0
-	const char* private_group_id = "NOTUSED";
-
 	if(!IsSmackEnabled())
-	{
 		return 0;
-	}
 
-	if(!strncmp(object,"NOTUSED", strlen(private_group_id)))
-	{
-		SLOGD("requested default group_id :%s. get smack label", object);
-		char* client_process_smack_label = security_server_get_smacklabel_sockfd(sockfd);
-		if(client_process_smack_label)
-		{
-			SLOGD("defined smack label : %s", client_process_smack_label);
-			strncpy(object, client_process_smack_label, strlen(client_process_smack_label));
-			free(client_process_smack_label);
-		}
-		else
-		{
-			SLOGD("failed to get smack label");
-			return -1;
-		}
-	}
-
-	SLOGD("object : %s, access_rights : %s", object, access_rights);
-	ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
-
+	int ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+	SECURE_SLOGD("object : %s, access_rights : %s, ret : %d", object, access_rights, ret);
 	return ret;
 }
 
 /* convert normal file path to secure storage file path  */
 int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, const char* group_id)
 {
-	char* if_pointer = NULL;
-	unsigned short h_code = 0;
-	unsigned short h_code2 = 0;
-	unsigned char path_hash[SHA_DIGEST_LENGTH + 1];
 	char s[33+1];
-	const char* dir = NULL;
-	char tmp_cmd[32] = {0, };
-	char tmp_buf[10] = {0, };
-	const unsigned char exe_path[256] = {0, };
-	FILE* fp_proc = NULL;
+	const char* dir = group_id;
 	char* preserved_dir = NULL;
 	int is_dir_exist = -1;
 
@@ -275,86 +228,8 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 
-	memset(tmp_cmd, 0x00, 32);
-	snprintf(tmp_cmd, 32, "/proc/%d/cmdline", sender_pid);
-
-	if(!(fp_proc = fopen(tmp_cmd, "r")))
-	{
-		SLOGE("file open error: [%s]", tmp_cmd);
-		return SS_FILE_OPEN_ERROR;
-	}
-	
-	fgets((char*)exe_path, 256, fp_proc);
-	fclose(fp_proc);
-
-	if(!strncmp(group_id, "NOTUSED", 7))	// don't share
-	{
-		h_code2 = GetHashCode(exe_path);
-		memset(tmp_buf, 0x00, 10);
-		snprintf(tmp_buf, 10, "%u", h_code2);
-		dir = tmp_buf;
-	}
-	else	// share
-		dir = group_id;
-
-	if_pointer = strrchr(src, '/');
-	
-	if(flag == SSM_FLAG_DATA) // /opt/share/secure-storage/*
-	{
-		// check whether directory is exist or not
-		is_dir_exist = IsDirExist(SS_STORAGE_DEFAULT_PATH);
-		
-		if (is_dir_exist == 0) // SS_STORAGE_FILE_PATH is not exist
-		{
-			SLOGI("directory [%s] is making now.\n", SS_STORAGE_DEFAULT_PATH);
-			if(mkdir(SS_STORAGE_DEFAULT_PATH, 0700) < 0)	// fail to make directory
-			{
-				SLOGE("[%s] cannot be made\n", SS_STORAGE_DEFAULT_PATH);
-				return SS_FILE_OPEN_ERROR;
-			}
-		}
-		else if (is_dir_exist == -1) // Unknown error
-		{
-			SLOGE("Unknown error in the function IsDirExist().\n");
-			return SS_PARAM_ERROR;
-		}
-
-		// TBD
-		strncpy(dest, SS_STORAGE_DEFAULT_PATH, MAX_FILENAME_LEN - 1);
-		strncat(dest, dir, (strlen(dest) - 1));
-		strncat(dest, "/", 1);
-
-		// make directory
-		dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + 2] = '\0';
-		is_dir_exist = IsDirExist(dest);
-
-		if(is_dir_exist == 0) // not exist
-		{
-			SLOGI("%s is making now.\n", dest);
-			if(mkdir(dest, 0700) < 0)	// fail to make directory
-			{
-				SLOGE("[%s] cannot be made\n", dest);
-				return SS_FILE_OPEN_ERROR;
-			}
-		}
-		
-		int length_of_file = 0;
-		if(if_pointer != NULL)
-		{
-			strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
-		}
-		strncat(dest, "_", 1);
-
-		SHA1((unsigned char*)src, (size_t)strlen(src), path_hash);
-		h_code = GetHashCode(path_hash);
-		memset(s, 0x00, 34);
-		snprintf(s, 34, "%u", h_code);
-		strncat(dest, s, strlen(s));
-		strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
-
-		dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + length_of_file + strlen(s) + strlen(SS_FILE_POSTFIX) + 4] = '\0';
-	}
-	else if(flag == SSM_FLAG_SECRET_PRESERVE) // /tmp/csa/
+	// get top-dir path
+	if(flag == SSM_FLAG_SECRET_PRESERVE)
 	{
 		preserved_dir = get_preserved_dir();
 		if(preserved_dir == NULL)	// fail to get preserved directory
@@ -362,134 +237,161 @@ int ConvertFileName(int sender_pid, char* dest, const char* src, ssm_flag flag, 
 			SLOGE("fail to get preserved dir\n");
 			return SS_FILE_OPEN_ERROR;
 		}
-		
-		if(strncmp(src, preserved_dir, strlen(preserved_dir)) == 0) //src[0] == '/')
-		{
-			strncpy(dest, src, MAX_FILENAME_LEN - 1);
-			strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
 
-			dest[strlen(src) + strlen(SS_FILE_POSTFIX)] = '\0';
-		}
-		else if(if_pointer != NULL)	// absolute path == file
-		{
-			strncpy(dest, preserved_dir, MAX_FILENAME_LEN - 1);
-			strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
-			strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
-			dest[strlen(preserved_dir) + strlen(if_pointer) + strlen(SS_FILE_POSTFIX) + 1] = '\0';
-		}
-		else	// relative path == buffer
-		{
-			strncpy(dest, preserved_dir, MAX_FILENAME_LEN - 1);
-			strncat(dest, src, strlen(src));
-			strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
-			dest[strlen(preserved_dir) + strlen(src) + strlen(SS_FILE_POSTFIX)] = '\0';
-		}
-
+		strncpy(dest, preserved_dir, strlen(preserved_dir));  //dest <= /csa
 		free(preserved_dir);
-
 	}
-	else if(flag == SSM_FLAG_SECRET_OPERATION) // /opt/share/secure-storage/
+	else 	// SSM_FLAG_SECRET_DATA || SSM_FLAG_SECRET_OPERATION || SSM_FLAG_PRELOADED_WEB_APP
 	{
-		if(if_pointer != NULL) 	// absolute path == input is a file
+		if(CreateStorageDir(SS_STORAGE_DEFAULT_PATH) < 0)
 		{
-			// check whether directory is exist or not
-			is_dir_exist = IsDirExist(SS_STORAGE_DEFAULT_PATH);
-
-			if (is_dir_exist == 0) // SS_STORAGE_FILE_PATH is not exist
-			{
-				SLOGI("%s is making now.\n", SS_STORAGE_DEFAULT_PATH);
-				if(mkdir(SS_STORAGE_DEFAULT_PATH, 0700) < 0)	// fail to make directory
-				{
-					SLOGE("[%s] cannnot be made\n", SS_STORAGE_DEFAULT_PATH);
-					return SS_FILE_OPEN_ERROR;
-				}
-			}
-			else if (is_dir_exist == -1) // Unknown error
-			{
-				SLOGE("Unknown error in the function IsDirExist().\n");
-				return SS_PARAM_ERROR;
-			}
-			
-			strncpy(dest, SS_STORAGE_DEFAULT_PATH, MAX_FILENAME_LEN - 1);
-			strncat(dest, dir, strlen(dir));
-			strncat(dest, "/", 1);
-
-			// make directory
-			dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + 2] = '\0';
-			is_dir_exist = IsDirExist(dest);
-
-			if(is_dir_exist == 0) // not exist
-			{
-				SLOGI("%s is making now.\n", dest);
-				if(mkdir(dest, 0700) < 0)
-				{
-					SLOGE("[%s] cannot be made\n", dest);
-					return SS_FILE_OPEN_ERROR;
-				}
-			}
-			
-			strncat(dest, if_pointer + 1, strlen(if_pointer) + 1);
-			strncat(dest, "_", 1);
-			SHA1((unsigned char*)src, (size_t)strlen(src), path_hash);
-			h_code = GetHashCode(path_hash);
-			memset(s, 0x00, 34);
-			snprintf(s, 34, "%u", h_code);
-			strncat(dest, s, strlen(s));
-			strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
-
-			dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + strlen(if_pointer) + strlen(s) + strlen(SS_FILE_POSTFIX) + 4] = '\0';
+			return SS_FILE_OPEN_ERROR;
 		}
-		else	// relative path == input is a buffer
-		{
-			// check whether directory is exist or not
-			is_dir_exist = IsDirExist(SS_STORAGE_DEFAULT_PATH);
+		// TBD
+		strncpy(dest, SS_STORAGE_DEFAULT_PATH, strlen(SS_STORAGE_DEFAULT_PATH) + 1);
+	}
 
-			if (is_dir_exist == 0) // SS_STORAGE_BUFFER_PATH is not exist
-			{
-				SLOGI("%s is making now.\n", SS_STORAGE_DEFAULT_PATH);
-				if(mkdir(SS_STORAGE_DEFAULT_PATH, 0700) < 0)
-				{
-					SLOGE("[%s] cannot be made\n", SS_STORAGE_DEFAULT_PATH);
-					return SS_FILE_OPEN_ERROR;
-				}
-			}
-			else if (is_dir_exist == -1) // Unknown error
-			{
-				SLOGE("Unknown error in the function IsDirExist().\n");
-				return SS_PARAM_ERROR;
-			}
+	strncat(dest, dir, (strlen(dir))); 	// add top-dir + dir(label)
+	strncat(dest, "/", 1);
 
-			strncpy(dest, SS_STORAGE_DEFAULT_PATH, MAX_FILENAME_LEN - 1);
-			strncat(dest, dir, strlen(dir));
-			strncat(dest, "/", 1);
+	if(CreateStorageDir(dest) < 0)
+	{
+		return SS_FILE_OPEN_ERROR;
+	}
 
-			// make directory
-			dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + 2] = '\0';
-			is_dir_exist = IsDirExist(dest);
+	strncat(dest, "_", 1); 	// /top-dir/label/_
 
-			if(is_dir_exist == 0) // not exist
-			{
-				SLOGI("%s is making now.\n", dest);
-				if(mkdir(dest, 0700) < 0)
-				{
-					SLOGE("[%s] cannot be made\n", dest);
-					return SS_FILE_OPEN_ERROR;
-				}
-			}
+	GetPathHash(src, s);
+	strncat(dest, s, strlen(s)); 	// /top-dir/label/_hash
+	strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX)); 	// /top-dir/label/_hash.e
 
-			strncat(dest, src, strlen(src));
-			strncat(dest, SS_FILE_POSTFIX, strlen(SS_FILE_POSTFIX));
+	SECURE_SLOGD("final dest : %s", dest);
 
-			dest[strlen(SS_STORAGE_DEFAULT_PATH) + strlen(dir) + strlen(src) + strlen(SS_FILE_POSTFIX) + 2] = '\0';
-		}
+	return 1;
+}
+
+int GetProcessExecPath(int pid, char* buffer)
+{
+	char tmp_cmd[32] = {0,};
+	FILE *fp_proc = NULL;
+	snprintf(tmp_cmd, 32, "/proc/%d/cmdline", pid);
+
+	if(!(fp_proc = fopen(tmp_cmd, "r")))
+	{
+		SECURE_SLOGE("file open error: [%s]", tmp_cmd);
+		return SS_FILE_OPEN_ERROR;
+	}
+
+	fgets((char*)buffer, 256, fp_proc);
+	fclose(fp_proc);
+
+	return 0;
+}
+
+int GetProcessSmackLabel(int sockfd, char* proc_smack_label)
+{
+	char* smack_label = security_server_get_smacklabel_sockfd(sockfd);
+	if(smack_label)
+	{
+		strncpy(proc_smack_label, smack_label, strlen(smack_label));
+		free(smack_label);
 	}
 	else
 	{
-		SLOGE("flag mispatch. cannot convert file name.\n");
-		return SS_PARAM_ERROR;
+		SLOGE("failed to get smack label");
+		return -1; // SS_SECURITY_SERVER_ERROR?
+	}
+	SECURE_SLOGD("defined smack label : %s", proc_smack_label);
+	return 0;
+}
+
+int GetPathHash(const char *src, char *output)
+{
+	unsigned short h_code = 0;
+	unsigned char path_hash[SHA_DIGEST_LENGTH + 1];
+
+	SHA1((unsigned char*)src, (size_t)strlen(src), path_hash);
+	h_code = GetHashCode(path_hash);
+	memset(output, 0x00, 34);
+	snprintf(output, 34, "%u", h_code);
+
+	SECURE_SLOGD("hashing src : %s to output : %s", src, output);
+
+	return 0;
+}
+
+
+int CreateStorageDir(const char* path)
+{
+	int is_dir_exist = IsDirExist(path);
+
+	if (is_dir_exist == 0) // path directory is not exist
+	{
+		SECURE_SLOGI("directory [%s] is making now.\n", path);
+		if(mkdir(path, 0700) < 0)	// fail to make directory
+		{
+			SLOGE("[%s] cannot be made\n", SS_STORAGE_DEFAULT_PATH);
+			return -SS_FILE_OPEN_ERROR;
+		}
 	}
 
-	return 1;
+	return 0;
+}
+
+/*
+ * if group_id is given, use group_id
+ *
+ * if NULL group_id is given
+ * smack enable :  use process smack label
+ * smack disable :  use process exec path
+ *
+ */
+int GetProcessStorageDir(int sockfd, int sender_pid, const char* group_id, char* output)
+{
+	char *object = group_id;
+	char proc_smack_label[MAX_GROUP_ID_LEN+1] = {0,};
+	char hash_buf[10] = {0, };
+	int is_shared = strncmp(group_id, "NOTUSED", 7) ? 1 : 0;
+
+#ifdef SMACK_GROUP_ID
+	if(IsSmackEnabled())
+	{
+		if(!is_shared) 	// don't share, use process smack label
+		{
+			if(GetProcessSmackLabel(sockfd, proc_smack_label) != 0)
+			{
+				return -SS_SECURE_STORAGE_ERROR;
+			}
+			object = proc_smack_label;
+		}
+	}
+	else{
+#endif
+		char exe_path[256] = {0,};
+		int h_code2 = 0;
+
+		if(!is_shared)	// don't share
+		{
+			if(GetProcessExecPath(sender_pid, exe_path) != 0)
+			{
+				return -SS_SECURE_STORAGE_ERROR;
+			}
+			h_code2 = GetHashCode(exe_path);
+			snprintf(hash_buf, 10, "%u", h_code2);
+			object = hash_buf;
+		}
+#ifdef SMACK_GROUP_ID
+	}
+#endif
+	strncpy(output, object, strlen(object));
+	return 0;
+}
+
+void SetMetaData(ssm_file_info_convert_t* sfic, unsigned int orig_size, unsigned int stored_size, int flag)
+{
+	sfic->fInfoStruct.originSize = (unsigned int)orig_size;
+	sfic->fInfoStruct.storedSize = (unsigned int)stored_size;
+	sfic->fInfoStruct.reserved[0] = flag & 0x000000ff;
 }
 
 /* aes crypto function wrapper - p_text : plain text, c_text : cipher text, aes_key : from GetKey, mode : ENCRYPT/DECRYPT, size : data size */
@@ -530,25 +432,35 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	FILE* fd_out = NULL;
 	struct stat file_info;
 	ssm_file_info_convert_t sfic;
-	int res = -1;
 
 	unsigned char p_text[ENCRYPT_SIZE]= {0, };
 	unsigned char e_text[ENCRYPT_SIZE]= {0, };
 
 	size_t read = 0, rest = 0;
+	int res = -1;
 
 	//0. privilege check and get directory name
-#ifdef SMACK_GROUP_ID
-	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
+	char dir[MAX_GROUP_ID_LEN] = {0,};
+	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
 	{
-		SLOGE("[%s] permission denied\n", group_id);
-		return SS_PERMISSION_DENIED;
+		SLOGE("Failed to get storage dir\n");
+		return SS_SECURE_STORAGE_ERROR;
+	}
+
+#ifdef SMACK_GROUP_ID
+	if(flag != SSM_FLAG_PRELOADED_WEB_APP)
+	{
+		if(check_privilege_by_sockfd(sockfd, dir, "w") < 0)
+		{
+			SLOGE("Permission denied\n");
+			return SS_PERMISSION_DENIED;
+		}
 	}
 #endif
 
 	// 1. create out file name
-	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, group_id);
-	
+	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, dir);
+
 	// 2. file open 
 	if(!(fd_in = fopen(in_filepath, "rb")))
 	{
@@ -574,9 +486,7 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	// 3. write metadata
 	if(!stat(in_filepath, &file_info))
 	{
-		sfic.fInfoStruct.originSize = (unsigned int)file_info.st_size;
-		sfic.fInfoStruct.storedSize = (unsigned int)(sfic.fInfoStruct.originSize/AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
-		sfic.fInfoStruct.reserved[0] = flag & 0x000000ff;
+		SetMetaData(&sfic, file_info.st_size, (file_info.st_size/AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE, flag);
 	}
 	else
 	{
@@ -639,15 +549,37 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 {
 	char key[16] = {0, };
 	unsigned char iv[16] = {0, };
-	char out_filepath[MAX_FILENAME_LEN+1];
+	char out_filepath[MAX_FILENAME_LEN+1] = {0,};
 	char *buffer = NULL;
 	unsigned int writeLen = 0, loop, rest, count;
 	FILE *fd_out = NULL;
 	ssm_file_info_convert_t sfic;
-	unsigned char p_text[ENCRYPT_SIZE]= {0, };
-	unsigned char e_text[ENCRYPT_SIZE]= {0, };
+	unsigned char p_text[ENCRYPT_SIZE] = {0, };
+	unsigned char e_text[ENCRYPT_SIZE] = {0, };
 	int res = -1;
-	
+
+	//0. get directory name and privilege check
+	char dir[MAX_GROUP_ID_LEN] = {0,};
+	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+	{
+		SLOGE("Failed to get storage dir\n");
+		return SS_SECURE_STORAGE_ERROR;
+	}
+
+#ifdef SMACK_GROUP_ID
+	if(flag != SSM_FLAG_PRELOADED_WEB_APP)
+	{
+		if(check_privilege_by_sockfd(sockfd, dir, "w") < 0)
+		{
+			SLOGE("Permission denied\n");
+			return SS_PERMISSION_DENIED;
+		}
+	}
+#endif
+
+	// create file path from filename
+	ConvertFileName(sender_pid, out_filepath, filename, flag, dir);
+
 	writeLen = (unsigned int)(bufLen / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
 	buffer = (char*)malloc(writeLen + 1);
 	if(!buffer)
@@ -658,23 +590,10 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	memset(buffer, 0x00, writeLen);
 	memcpy(buffer, writebuffer, bufLen);
 
-	//0. privilege check and get directory name
-#ifdef SMACK_GROUP_ID
-	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
-	{
-		SLOGE("permission denied\n");
-		free(buffer);
-		return SS_PERMISSION_DENIED;
-	}
-#endif
-	
-	// create file path from filename
-	ConvertFileName(sender_pid, out_filepath, filename, flag, group_id); 
-
 	// open a file with write mode
 	if(!(fd_out = fopen(out_filepath, "wb")))
 	{
-		SLOGE("File open error:(out_filepath) %s\n", out_filepath);
+		SECURE_SLOGE("File open error:(out_filepath) %s\n", out_filepath);
 		free(buffer);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
@@ -688,9 +607,7 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	}
 	
 	// write metadata
-	sfic.fInfoStruct.originSize = (unsigned int)bufLen;
-	sfic.fInfoStruct.storedSize = writeLen;
-	sfic.fInfoStruct.reserved[0] = flag & 0x000000ff;
+	SetMetaData(&sfic, bufLen, writeLen, flag);
 
 	fwrite(sfic.fInfoArray, 1, sizeof(ssm_file_info_t), fd_out);
 	
@@ -730,9 +647,9 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 			SLOGI("success to execute fsync(). loop=[%d], rest=[%d]\n", loop, rest);
 	}
 
-	fclose(fd_out);	
+	fclose(fd_out);
 	free(buffer);
-	
+
 	return 1;
 }
 
@@ -755,12 +672,22 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	
 	*readLen = 0;
 
-	//0. privilege check and get directory name
-#ifdef SMACK_GROUP_ID
-	if(check_privilege_by_sockfd(sockfd, group_id, "r") != 0)
+	//0. get directory name and privilege check
+	char dir[MAX_GROUP_ID_LEN] = {0,};
+	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
 	{
-		SLOGE("permission denied\n");
-		return SS_PERMISSION_DENIED;
+		SLOGE("Failed to get storage dir\n");
+		return SS_SECURE_STORAGE_ERROR;
+	}
+
+#ifdef SMACK_GROUP_ID
+	if(flag != SSM_FLAG_PRELOADED_WEB_APP)
+	{
+		if(check_privilege_by_sockfd(sockfd, dir, "r") < 0)
+		{
+			SLOGE("Permission denied\n");
+			return SS_PERMISSION_DENIED;
+		}
 	}
 #endif
 
@@ -768,12 +695,12 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	if(flag == SSM_FLAG_WIDGET)
 		strncpy(in_filepath, data_filepath, MAX_FILENAME_LEN - 1);
 	else
-		ConvertFileName(sender_pid, in_filepath, data_filepath, flag, group_id);
+		ConvertFileName(sender_pid, in_filepath, data_filepath, flag, dir);
 
 	// 2. open file
 	if(!(fd_in = fopen(in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) %s\n", in_filepath);
+		SECURE_SLOGE("File open error:(in_filepath) %s\n", in_filepath);
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 	
@@ -781,7 +708,7 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	if(fseek(fd_in, (long)offset + sizeof(ssm_file_info_t), SEEK_SET) < 0)
 	{
 	    int err_tmp = errno;
-	    SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
+	    SECURE_SLOGE("Fseek error: %s in %s\n", strerror(err_tmp), in_filepath);
 	    fclose(fd_in);
 	    return SS_FILE_OPEN_ERROR;  // file related error
 	}
@@ -816,10 +743,10 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 	out_data += read;
 	*readLen += read;
 Last:
-	*out_data = '\0'; 
+	*out_data = '\0';
 
 	fclose(fd_in);
-	
+
 	return 1;
 }
 
@@ -832,17 +759,28 @@ int SsServerDeleteFile(int sender_pid, const char* data_filepath, ssm_flag flag,
 	const char* in_filepath = data_filepath;
 	char out_filepath[MAX_FILENAME_LEN] = {0, };
 
-	//0. privilege check and get directory name
-#ifdef SMACK_GROUP_ID
-	if(check_privilege_by_sockfd(sockfd, group_id, "w") != 0)
+	//0. get directory name and privilege check
+	char dir[MAX_GROUP_ID_LEN] = {0,};
+	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
 	{
-		SLOGE("permission denied\n");
-		return SS_PERMISSION_DENIED;
+		SLOGE("Failed to get storage dir\n");
+		return SS_SECURE_STORAGE_ERROR;
+	}
+
+#ifdef SMACK_GROUP_ID
+	if(flag != SSM_FLAG_PRELOADED_WEB_APP)
+	{
+		if(check_privilege_by_sockfd(sockfd, dir, "w") < 0)
+		{
+			SLOGE("Permission denied\n");
+			return SS_PERMISSION_DENIED;
+		}
 	}
 #endif
-	// 1. create out file name
-	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, group_id);
-	
+
+	// create file path from filename
+	ConvertFileName(sender_pid, out_filepath, in_filepath, flag, dir);
+
 	// 2. delete designated file
 	if(unlink(out_filepath) != 0)	// unlink fail?
 	{
@@ -863,25 +801,35 @@ int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, 
 	FILE *fd_in = NULL;
 	char in_filepath[MAX_FILENAME_LEN] = {0, };
 
-	//0. privilege check and get directory name
-#ifdef SMACK_GROUP_ID
-	if(check_privilege_by_sockfd(sockfd, group_id, "r") != 0)
+	//0. get directory name and privilege check
+	char dir[MAX_GROUP_ID_LEN] = {0,};
+	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
 	{
-		SLOGE("permission denied, [%s]\n", group_id);
-		return SS_PERMISSION_DENIED;
+		SLOGE("Failed to get storage dir\n");
+		return SS_SECURE_STORAGE_ERROR;
+	}
+
+#ifdef SMACK_GROUP_ID
+	if(flag != SSM_FLAG_PRELOADED_WEB_APP)
+	{
+		if(check_privilege_by_sockfd(sockfd, dir, "r") < 0)
+		{
+			SLOGE("Permission denied\n");
+			return SS_PERMISSION_DENIED;
+		}
 	}
 #endif
-	
+
 	// 1. create in file name : convert file name in order to access secure storage
 	if(flag == SSM_FLAG_WIDGET)
 		strncpy(in_filepath, data_filepath, MAX_FILENAME_LEN - 1);
 	else
-		ConvertFileName(sender_pid, in_filepath, data_filepath, flag, group_id);
-	
+		ConvertFileName(sender_pid, in_filepath, data_filepath, flag, dir);
+
 	// 1. open file
 	if(!(fd_in = fopen( in_filepath, "rb")))
 	{
-		SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
+		SECURE_SLOGE("File open error:(in_filepath) [%s], [%s]\n", data_filepath, in_filepath );
 		return SS_FILE_OPEN_ERROR;	// file related error
 	}
 
