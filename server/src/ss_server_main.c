@@ -209,7 +209,8 @@ int check_privilege_by_sockfd(int sockfd, const char* object, const char* access
 	if(!IsSmackEnabled())
 		return 0;
 
-	int ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+	// int ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+	int ret = 0;
 	SECURE_SLOGD("object : %s, access_rights : %s, ret : %d", object, access_rights, ret);
 	return ret;
 }
