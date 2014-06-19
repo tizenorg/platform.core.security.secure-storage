@@ -525,7 +525,7 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 	}
 	else {
 		SLOGI("success to execute fflush().\n");
-		if((res = fsync(fd_out->_fileno)) == -1) {
+		if((res = fsync(fileno(fd_out))) == -1) {
 			SLOGE("fail to execute fsync().\n");
 			fclose(fd_in);
 			fclose(fd_out);
@@ -637,7 +637,7 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 	}
 	else {
 		SLOGI("success to execute fflush().\n");
-		if((res = fsync(fd_out->_fileno)) == -1) {
+		if((res = fsync(fileno(fd_out))) == -1) {
 			SLOGE("fail to execute fsync().\n");
 			fclose(fd_out);
 			free(buffer);
