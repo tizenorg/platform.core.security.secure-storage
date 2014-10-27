@@ -73,11 +73,13 @@ cp LICENSE.APLv2 %{buildroot}/usr/share/license/libss-client
 %preun -n ss-server
 if [ $1 == 0 ]; then
     systemctl stop secure-storage.service
+    systemctl disable secure-storage.service -q
 fi
 
 %post -n ss-server
 systemctl daemon-reload
 if [ $1 == 1 ]; then
+    systemctl enable secure-storage.service -q
     systemctl restart secure-storage.service
 fi
 

@@ -34,7 +34,7 @@
 #define		MAX_GROUP_ID_LEN	32
 #define		MAX_COOKIE_LEN		20
 
-#define SS_STORAGE_DEFAULT_PATH		"/opt/share/secure-storage/"
+#define SS_STORAGE_DEFAULT_PATH		"/usr/share/secure-storage/"
 
 /* using dlog */
 #ifdef SS_DLOG_USE

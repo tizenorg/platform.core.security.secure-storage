@@ -1,0 +1,3 @@
+* Mon Oct 27 2014 John L. Whiteman <john.l.whiteman@intel.com> accepted/tizen/ivi/panda/20140403.015004-2-g35c2a1a
+- Fixed TC-1738.  ss-server service does not start
+
