@@ -11,7 +11,7 @@ Source1003:	ss-server.manifest
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(libsystemd-daemon)
-BuildRequires:  pkgconfig(security-server)
+#BuildRequires:  pkgconfig(security-server)
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dukgenerator)
 
@@ -46,6 +46,15 @@ Requires:   libss-client = %{version}-%{release}
 
 %description -n ss-server
 Secure storage package (ss-server)
+
+%package -n ss-client-tests
+Summary:  Internal test for secure-storage
+Group:    Development
+Requires: libss-client = %{version}-%{release}
+
+%description -n ss-client-tests
+Internal test for secure-storage implementation
+
 
 %prep
 %setup -q
@@ -113,4 +122,8 @@ systemctl daemon-reload
 %{_includedir}/ss_manager.h
 %{_libdir}/pkgconfig/secure-storage.pc
 %{_libdir}/libss-client.so
+
+%files -n ss-client-tests
+%defattr(-,root,root,-)
+%{_bindir}/ss-client-tests
 

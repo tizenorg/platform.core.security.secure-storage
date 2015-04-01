@@ -25,7 +25,7 @@ SET(ss_client_dir "./client/src")
 SET(ss_client_include_dir "./client/include")
 SET(ss_server_dir "./server/src")
 SET(ss_server_include_dir "./server/include")
-SET(ss_test_dir "./testcases")
+SET(ss_test_dir "./tests")
 
 ## About debug
 #SET(debug_type "") 					# for debug - use no debugging
@@ -34,7 +34,7 @@ SET(debug_type "-DSS_DLOG_USE") 		# for debug - use dlog
 #SET(debug_type "") 						# for debug - DO NOT use
 SET(use_key "-DUSE_KEY_FILE")		# for private key - use key file
 #SET(use_key "-DUSE_NOT")			# for private key - use no private key, key will be fixed
-SET(smack_groupid "-DSMACK_GROUP_ID") # for group id sharing with smack label
+#SET(smack_groupid "-DSMACK_GROUP_ID") # for group id sharing with smack label
 
 SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} -fvisibility=hidden")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
@@ -60,7 +60,8 @@ SET(ss-server_CFLAGS " -I. -I${ss_include_dir} -I${ss_server_include_dir} ${debu
 SET(ss-server_LDFLAGS ${pkgs_LDFLAGS})
 
 ADD_EXECUTABLE(ss-server ${ss-server_SOURCES})
-TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client )
+#TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} -lsecurity-server-client )
+TARGET_LINK_LIBRARIES(ss-server ${pkgs_LDFLAGS} )
 SET_TARGET_PROPERTIES(ss-server PROPERTIES COMPILE_FLAGS "${ss-server_CFLAGS}")
 ####################################################################################################
 
@@ -74,3 +75,20 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config DESTINATION share/secure-storag
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/ss_manager.h DESTINATION include)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.service DESTINATION /usr/lib/systemd/system)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/systemd/secure-storage.socket DESTINATION /usr/lib/systemd/system)
+
+
+###################################################################################################
+## for ss-client-tests
+SET(ss-client-tests_SOURCES ${ss_test_dir}/ss_client_tests.c )
+SET(ss-client-tests_LDFLAGS " -module -avoid-version ${OPENSSL_LIBS}")
+SET(ss-client-tests_CFLAGS  " ${CFLAGS} -fPIC -I${ss_client_include_dir} -I${ss_include_dir} ${OPENSSL_CFLAGS} ${debug_type} ")
+#SET(libss-client_LIBADD " ${OPENSSL_LIBS} ")
+
+ADD_EXECUTABLE(ss-client-tests ${ss-client-tests_SOURCES})
+TARGET_LINK_LIBRARIES(ss-client-tests ss-client )
+SET_TARGET_PROPERTIES(ss-client-tests PROPERTIES COMPILE_FLAGS "${ss-client-tests_CFLAGS}")
+
+INSTALL(PROGRAMS ${CMAKE_BINARY_DIR}/ss-client-tests DESTINATION bin)
+###################################################################################################
+
+

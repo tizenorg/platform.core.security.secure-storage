@@ -48,7 +48,10 @@
 #include "secure_storage.h"
 #include "ss_server_main.h"
 #include "ss_server_ipc.h"
+
+#ifdef SMACK_GROUP_ID
 #include <security-server/security-server.h>
+#endif
 
 #ifdef USE_KEY_FILE
 #define CONF_FILE_PATH	"/usr/share/secure-storage/config"
@@ -206,11 +209,14 @@ int IsDirExist(const char* dirpath)
 
 int check_privilege_by_sockfd(int sockfd, const char* object, const char* access_rights)
 {
+    int ret = 0;
+#ifdef SMACK_GROUP_ID
 	if(!IsSmackEnabled())
 		return 0;
 
-	int ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
+	ret = security_server_check_privilege_by_sockfd(sockfd, object, access_rights);
 	SECURE_SLOGD("object : %s, access_rights : %s, ret : %d", object, access_rights, ret);
+#endif
 	return ret;
 }
 
@@ -288,6 +294,7 @@ int GetProcessExecPath(int pid, char* buffer)
 	return 0;
 }
 
+#ifdef SMACK_GROUP_ID
 int GetProcessSmackLabel(int sockfd, char* proc_smack_label)
 {
 	char* smack_label = security_server_get_smacklabel_sockfd(sockfd);
@@ -304,6 +311,7 @@ int GetProcessSmackLabel(int sockfd, char* proc_smack_label)
 	SECURE_SLOGD("defined smack label : %s", proc_smack_label);
 	return 0;
 }
+#endif
 
 int GetPathHash(const char *src, char *output)
 {
@@ -441,7 +449,11 @@ int SsServerDataStoreFromFile(int sender_pid, const char* data_filepath, ssm_fla
 
 	//0. privilege check and get directory name
 	char dir[MAX_GROUP_ID_LEN] = {0,};
+#ifdef SMACK_GROUP_ID
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+#else 
+	if(GetProcessStorageDir(-1, sender_pid, group_id, dir) < 0)
+#endif
 	{
 		SLOGE("Failed to get storage dir\n");
 		return SS_SECURE_STORAGE_ERROR;
@@ -560,7 +572,11 @@ int SsServerDataStoreFromBuffer(int sender_pid, char* writebuffer, size_t bufLen
 
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
+#ifdef SMACK_GROUP_ID
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+#else
+	if(GetProcessStorageDir(-1, sender_pid, group_id, dir) < 0)
+#endif
 	{
 		SLOGE("Failed to get storage dir\n");
 		return SS_SECURE_STORAGE_ERROR;
@@ -674,7 +690,11 @@ int SsServerDataRead(int sender_pid, const char* data_filepath, char* pRetBuf, u
 
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
+#ifdef SMACK_GROUP_ID
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+#else
+	if(GetProcessStorageDir(-1, sender_pid, group_id, dir) < 0)
+#endif
 	{
 		SLOGE("Failed to get storage dir\n");
 		return SS_SECURE_STORAGE_ERROR;
@@ -761,7 +781,11 @@ int SsServerDeleteFile(int sender_pid, const char* data_filepath, ssm_flag flag,
 
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
+#ifdef SMACK_GROUP_ID
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+#else
+	if(GetProcessStorageDir(-1, sender_pid, group_id, dir) < 0)
+#endif
 	{
 		SLOGE("Failed to get storage dir\n");
 		return SS_SECURE_STORAGE_ERROR;
@@ -803,7 +827,11 @@ int SsServerGetInfo(int sender_pid, const char* data_filepath, char* file_info, 
 
 	//0. get directory name and privilege check
 	char dir[MAX_GROUP_ID_LEN] = {0,};
+#ifdef SMACK_GROUP_ID
 	if(GetProcessStorageDir(sockfd, sender_pid, group_id, dir) < 0)
+#else
+	if(GetProcessStorageDir(-1, sender_pid, group_id, dir) < 0)
+#endif
 	{
 		SLOGE("Failed to get storage dir\n");
 		return SS_SECURE_STORAGE_ERROR;
